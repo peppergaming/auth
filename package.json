@@ -19,5 +19,8 @@
   "bugs": {
     "url": "https://github.com/peppergaming/auth/issues"
   },
-  "homepage": "https://github.com/peppergaming/auth#readme"
+  "homepage": "https://github.com/peppergaming/auth#readme",
+  "devDependencies": {
+    "prettier": "^2.7.1"
+  }
 }
