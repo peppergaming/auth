@@ -1,1 +1,1 @@
-# auth
+# Pepper Gaming Auth SDK
