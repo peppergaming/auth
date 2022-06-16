@@ -1,0 +1,23 @@
+{
+  "name": "@peppergaming/auth",
+  "version": "0.0.1",
+  "description": "Pepper Auth for dapps",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/peppergaming/auth.git"
+  },
+  "keywords": [
+    "auth",
+    "web3"
+  ],
+  "author": "Pepper Gaming",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/peppergaming/auth/issues"
+  },
+  "homepage": "https://github.com/peppergaming/auth#readme"
+}
