@@ -11,7 +11,13 @@
   },
   "homepage": "https://peppergaming.com",
   "license": "MIT",
-  "keywords": ["web3", "dapp", "gaming", "authentication", "login"],
+  "keywords": [
+    "web3",
+    "dapp",
+    "gaming",
+    "authentication",
+    "login"
+  ],
   "scripts": {
     "build": "run-p build:*",
     "build:main": "tsc -p tsconfig.json",
@@ -45,7 +51,10 @@
   "engines": {
     "node": ">=10"
   },
-  "dependencies": {},
+  "dependencies": {
+    "loglevel": "^1.8.0",
+    "loglevel-plugin-prefix": "^0.8.4"
+  },
   "devDependencies": {
     "@ava/typescript": "^1.1.1",
     "@istanbuljs/nyc-config-typescript": "^1.0.1",
