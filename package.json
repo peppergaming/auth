@@ -5,9 +5,13 @@
   "main": "build/main/index.js",
   "typings": "build/main/index.d.ts",
   "module": "build/module/index.js",
-  "repository": "https://github.com/YOUR_GITHUB_USER_NAME/@peppergaming/auth",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/peppergaming/auth.git"
+  },
+  "homepage": "https://peppergaming.com",
   "license": "MIT",
-  "keywords": [],
+  "keywords": ["web3", "dapp", "gaming", "authentication", "login"],
   "scripts": {
     "build": "run-p build:*",
     "build:main": "tsc -p tsconfig.json",
