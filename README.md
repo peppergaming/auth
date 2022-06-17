@@ -1,3 +1,3 @@
-# @peppergaming/auth
+# PepperGaming auth SDK
 
-Easy auth for web3 gamming apps
+Easy auth for web3 gaming apps
