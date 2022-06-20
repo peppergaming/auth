@@ -21,7 +21,6 @@ export const getOpenLoginAdapter = async (
       uxMode,
     },
     loginSettings: {
-      // relogin: true,
       mfaLevel: 'none',
     },
   });

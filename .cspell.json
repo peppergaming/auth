@@ -23,7 +23,12 @@
     "sandboxed",
     "transpiled",
     "typedoc",
-    "untracked"
+    "untracked",
+    "PASSWORDLESS",
+    "SOLANA",
+    "loglevel",
+    "APIURL",
+    "OpenLogin"
   ],
   "flagWords": [],
   "ignorePaths": [
