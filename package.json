@@ -54,6 +54,7 @@
   "dependencies": {
     "@web3auth/core": "^1.0.1",
     "@web3auth/openlogin-adapter": "^1.0.1",
+    "ethers": "^5.6.9",
     "loglevel": "^1.8.0",
     "loglevel-plugin-prefix": "^0.8.4"
   },
@@ -61,11 +62,11 @@
     "@ava/typescript": "^1.1.1",
     "@istanbuljs/nyc-config-typescript": "^1.0.1",
     "@typescript-eslint/eslint-plugin": "^4.0.1",
-    "@typescript-eslint/parser": "^4.0.1",
+    "@typescript-eslint/parser": "^5.28.0",
     "ava": "^3.12.1",
     "codecov": "^3.5.0",
     "cspell": "^4.1.0",
-    "cz-conventional-changelog": "^3.3.0",
+    "cz-conventional-changelog": "^3.0.1",
     "eslint": "^7.8.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-eslint-comments": "^3.2.0",
@@ -78,7 +79,7 @@
     "prettier": "^2.1.1",
     "standard-version": "^9.0.0",
     "ts-node": "^9.0.0",
-    "typedoc": "^0.19.0",
+    "typedoc": "^0.22.17",
     "typescript": "^4.0.2"
   },
   "files": [
