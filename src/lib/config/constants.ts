@@ -26,3 +26,12 @@ export const CHAIN_TYPE = {
   // TODO
   // SOLANA: "solana",
 } as const;
+
+export const AUTH_METHODS = {
+  google: 'GOOGLE_AUTH',
+  discord: 'DISCORD_AUTH',
+  twitch: 'TWITCH_AUTH',
+  mail: 'PEPPER_AUTH',
+  jwt: 'PEPPER_AUTH',
+  wallet: 'WALLET_AUTH',
+};

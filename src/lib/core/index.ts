@@ -9,6 +9,7 @@ import { Web3AuthCore } from '@web3auth/core';
 import { OpenloginAdapter } from '@web3auth/openlogin-adapter';
 
 import {
+  AUTH_METHODS,
   CHAIN_TYPE,
   LOGIN_PROVIDER_TYPE,
   PEPPER_ACCESS_TOKEN_KEY,
@@ -25,7 +26,7 @@ import { PepperWallet } from '../wallet';
 
 import { getOpenLoginAdapter, UX_MODE_TYPE } from './adapters';
 
-interface PepperLoginOptions {
+export interface PepperLoginOptions {
   chainType?: typeof CHAIN_TYPE[keyof typeof CHAIN_TYPE];
   clientId?: string;
   logLevel?: LogLevel;
@@ -41,11 +42,25 @@ const defaultPepperLoginOptions: PepperLoginOptions = {
   isDevelopment: false,
 };
 
+export interface UserWeb3Profile extends Partial<UserInfo> {
+  publicAddress: string | null;
+  publicKey: string | null;
+}
+
+const defaultUserWeb3Profile: UserWeb3Profile = {
+  publicAddress: null,
+  publicKey: null,
+  name: '',
+  typeOfLogin: '',
+  email: '',
+  verifierId: '',
+};
+
 export class PepperLogin {
   readonly options: PepperLoginOptions;
   readonly web3AuthInstance: Web3AuthCore;
 
-  private userInfo: Partial<UserInfo> = null;
+  private userInfo: UserWeb3Profile = defaultUserWeb3Profile;
   private initialized = false;
 
   private adapter: OpenloginAdapter | null;
@@ -100,6 +115,10 @@ export class PepperLogin {
     return this.initialized;
   }
 
+  get provider(): Provider {
+    return this.#provider;
+  }
+
   private subscribeToAdapterEvents() {
     const web3Auth = this.web3AuthInstance;
     web3Auth.on(ADAPTER_EVENTS.CONNECTING, () => {
@@ -146,10 +165,18 @@ export class PepperLogin {
       );
 
       if (localProvider) {
-        this.userInfo = await this.web3AuthInstance.getUserInfo();
+        const userInfo = await this.web3AuthInstance.getUserInfo();
+        this.userInfo = {
+          ...defaultUserWeb3Profile,
+          ...userInfo,
+        };
+        console.debug('Current user info: ', this.userInfo);
+
         this.#signer = new PepperWallet(this.adapter);
         this.#provider = this.#signer.provider;
-        logger.debug('Current signer: ', this.#signer);
+        this.userInfo.publicAddress = this.#signer.address;
+        this.userInfo.publicKey = this.#signer.publicKey;
+        logger.debug('Current wallet: ', this.#signer);
         await this.pepperLogin();
       }
     } catch (e) {
