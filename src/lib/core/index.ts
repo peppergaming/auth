@@ -226,4 +226,20 @@ export class PepperLogin {
       logger.error('Error while logging with pepper: ', e);
     }
   }
+
+  public async logout() {
+    logger.warn('Logging out');
+    try {
+      if (this.web3Auth && this.web3Auth.status === ADAPTER_STATUS.CONNECTED) {
+        await this.web3Auth.logout({ cleanup: true });
+      }
+      if (this.adapter && this.adapter.status === ADAPTER_STATUS.CONNECTED)
+        await this.adapter.disconnect();
+    } catch (e) {
+      // console.error("Could not log out web3auth: ", e);
+    }
+
+    this.storage.removeItem(PEPPER_ACCESS_TOKEN_KEY);
+    this.pepperApi.setAccessToken(null);
+  }
 }
