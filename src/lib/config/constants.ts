@@ -14,3 +14,14 @@ export type LOGIN_PROVIDER_TYPE =
 
 export const PEPPER_API_DEV_URL = 'https://dev-nm.e2bs.ch/api';
 export const PEPPER_API_PROD_URL = 'https://api-pepper.zone/api';
+
+export const PEPPER_ACCESS_TOKEN_KEY = 'PEPPER_ACCESS_TOKEN';
+
+export const PERSONAL_SIGN_PREFIX =
+  'Please sign this message to verify your identity: ';
+
+export const CHAIN_TYPE = {
+  EVM: 'evm',
+  // TODO
+  // SOLANA: "solana",
+} as const;

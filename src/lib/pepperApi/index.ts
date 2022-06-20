@@ -3,7 +3,7 @@ import logger from '../config/logger';
 import { getPepperAPIURL, UserWeb3Login, UserWeb3Verify } from './utils';
 
 export interface PepperApiOptions {
-  accessToken: string | null
+  accessToken: string | null;
   isDevelopment: boolean;
 }
 
@@ -55,6 +55,10 @@ export class PepperApi {
       return response.json() as Promise<T>;
     }
     throw response;
+  }
+
+  public setAccessToken(value: string | null) {
+    this.accessToken = value;
   }
 
   public async get<T>(path: string, requestOptions) {
