@@ -28,7 +28,8 @@
     "SOLANA",
     "loglevel",
     "APIURL",
-    "OpenLogin"
+    "OpenLogin",
+    "ethersproject"
   ],
   "flagWords": [],
   "ignorePaths": [

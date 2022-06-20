@@ -44,6 +44,7 @@ export class PepperWallet {
 
   async encrypt(
     password: Bytes | string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     options?: any,
     progressCallback?: ProgressCallback
   ): Promise<string> {
