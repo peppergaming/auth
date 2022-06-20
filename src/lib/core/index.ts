@@ -58,13 +58,12 @@ const defaultUserWeb3Profile: UserWeb3Profile = {
 
 export class PepperLogin {
   readonly options: PepperLoginOptions;
-  readonly web3AuthInstance: Web3AuthCore;
+  readonly web3Auth: Web3AuthCore;
 
   private userInfo: UserWeb3Profile = defaultUserWeb3Profile;
   private initialized = false;
 
   private adapter: OpenloginAdapter | null;
-  // TODO replace this with a wallet instance
   private storage = useStorage('local');
   private pepperApi: PepperApi;
   #provider: Provider = null;
@@ -78,7 +77,7 @@ export class PepperLogin {
     }
     setLoggerLevel(this.options.logLevel || DEFAULT_LEVEL);
 
-    this.web3AuthInstance = new Web3AuthCore({
+    this.web3Auth = new Web3AuthCore({
       chainConfig: { chainNamespace: 'other' },
     });
     this.adapter = null;
@@ -96,12 +95,12 @@ export class PepperLogin {
     try {
       const openLoginAdapter = await getOpenLoginAdapter(uxMode);
       this.adapter = openLoginAdapter;
-      this.web3AuthInstance.configureAdapter(openLoginAdapter);
+      this.web3Auth.configureAdapter(openLoginAdapter);
       this.subscribeToAdapterEvents();
-      await this.web3AuthInstance.init();
+      await this.web3Auth.init();
       this.initialized = true;
       logger.info('Initialized Pepper Login');
-      logger.debug('Current web3Auth status: ', this.web3AuthInstance.status);
+      logger.debug('Current web3Auth status: ', this.web3Auth.status);
     } catch (e) {
       logger.error('Error while initializing PepperLogin: ', e);
     }
@@ -120,7 +119,7 @@ export class PepperLogin {
   }
 
   private subscribeToAdapterEvents() {
-    const web3Auth = this.web3AuthInstance;
+    const web3Auth = this.web3Auth;
     web3Auth.on(ADAPTER_EVENTS.CONNECTING, () => {
       logger.debug('Connecting');
     });
@@ -156,16 +155,13 @@ export class PepperLogin {
 
     try {
       logger.debug('Trying to connect with: ', loginProvider);
-      const localProvider = await this.web3AuthInstance.connectTo(
-        this.adapter.name,
-        {
-          loginProvider,
-          loginHint,
-        }
-      );
+      const localProvider = await this.web3Auth.connectTo(this.adapter.name, {
+        loginProvider,
+        loginHint,
+      });
 
       if (localProvider) {
-        const userInfo = await this.web3AuthInstance.getUserInfo();
+        const userInfo = await this.web3Auth.getUserInfo();
         this.userInfo = {
           ...defaultUserWeb3Profile,
           ...userInfo,
@@ -183,7 +179,7 @@ export class PepperLogin {
       logger.error('Error while connecting with google: ', e);
     }
 
-    return this.#provider;
+    return this.#signer;
   }
 
   private async pepperLogin() {
@@ -191,43 +187,43 @@ export class PepperLogin {
       logger.error('Cannot login with pepper without a #signer');
       return null;
     }
-    logger.info('Connecting with Pepper');
+    logger.debug('Logging with Pepper');
 
-    // FIXME use proper value from web3Auth
-    const userWeb3Login = {
-      address: '',
-      auth_method: '',
-      email: '',
-      username: '',
-      web3_identifier: '',
-    };
-    const initResponse = await this.pepperApi.postWeb3Init(userWeb3Login);
-    if (initResponse && initResponse['nonce']) {
-      const nonce = initResponse['nonce'];
-      const message = PERSONAL_SIGN_PREFIX + nonce;
-
-      // FIXME get proper signature from #signer
-      const signature = message + 'signed';
-
-      // FIXME get proper public key from real signature
-      const publicKey = message + 'public';
-
-      const userWeb3Verify = {
-        public_key: publicKey || '',
-        address: '',
-        // signature: signatureCompact || "",
-        signature: signature || '',
-        message_prefix: PERSONAL_SIGN_PREFIX,
+    try {
+      const userWeb3Login = {
+        address: this.userInfo.publicAddress,
+        auth_method: AUTH_METHODS[this.userInfo.typeOfLogin] || '',
+        email: this.userInfo.email,
+        username: this.userInfo.name,
+        web3_identifier: this.userInfo.verifierId || '',
       };
-      const verifyResponse = await this.pepperApi.postWeb3Verify(
-        userWeb3Verify
-      );
+      const initResponse = await this.pepperApi.postWeb3Init(userWeb3Login);
+      if (initResponse && initResponse['nonce']) {
+        const nonce = initResponse['nonce'];
+        const message = PERSONAL_SIGN_PREFIX + nonce;
 
-      if (verifyResponse && verifyResponse['access_token']) {
-        const accessToken = verifyResponse['access_token'];
-        this.storage.setItem(PEPPER_ACCESS_TOKEN_KEY, accessToken);
-        this.pepperApi.setAccessToken(accessToken);
+        const signature = await this.#signer.signMessage(message);
+
+        const userWeb3Verify = {
+          public_key: this.userInfo.publicKey || '',
+          address: this.userInfo.publicAddress || '',
+          // signature: signatureCompact || "",
+          signature: signature || '',
+          message_prefix: PERSONAL_SIGN_PREFIX,
+        };
+        const verifyResponse = await this.pepperApi.postWeb3Verify(
+          userWeb3Verify
+        );
+
+        if (verifyResponse && verifyResponse['access_token']) {
+          const accessToken = verifyResponse['access_token'];
+          this.storage.setItem(PEPPER_ACCESS_TOKEN_KEY, accessToken);
+          this.pepperApi.setAccessToken(accessToken);
+          logger.info('Logged with Pepper');
+        }
       }
+    } catch (e) {
+      logger.error('Error while logging with pepper: ', e);
     }
   }
 }
