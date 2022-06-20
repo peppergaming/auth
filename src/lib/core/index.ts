@@ -1,7 +1,9 @@
+import { Provider } from '@ethersproject/providers';
 import {
   ADAPTER_EVENTS,
   ADAPTER_STATUS,
   CONNECTED_EVENT_DATA,
+  UserInfo,
 } from '@web3auth/base';
 import { Web3AuthCore } from '@web3auth/core';
 import { OpenloginAdapter } from '@web3auth/openlogin-adapter';
@@ -19,6 +21,7 @@ import logger, {
 } from '../config/logger';
 import { PepperApi } from '../pepperApi';
 import { useStorage } from '../util';
+import { PepperWallet } from '../wallet';
 
 import { getOpenLoginAdapter, UX_MODE_TYPE } from './adapters';
 
@@ -41,13 +44,16 @@ const defaultPepperLoginOptions: PepperLoginOptions = {
 export class PepperLogin {
   readonly options: PepperLoginOptions;
   readonly web3AuthInstance: Web3AuthCore;
+
+  private userInfo: Partial<UserInfo> = null;
+  private initialized = false;
+
   private adapter: OpenloginAdapter | null;
   // TODO replace this with a wallet instance
-  private provider: any = null;
-  private signer: any = null;
   private storage = useStorage('local');
   private pepperApi: PepperApi;
-  public initialized = false;
+  #provider: Provider = null;
+  #signer: PepperWallet = null;
 
   // TODO implement re-hydration
   constructor(options?: Partial<PepperLoginOptions>) {
@@ -80,9 +86,18 @@ export class PepperLogin {
       await this.web3AuthInstance.init();
       this.initialized = true;
       logger.info('Initialized Pepper Login');
+      logger.debug('Current web3Auth status: ', this.web3AuthInstance.status);
     } catch (e) {
       logger.error('Error while initializing PepperLogin: ', e);
     }
+  }
+
+  get getUserInfo(): Partial<UserInfo> | null {
+    return this.userInfo;
+  }
+
+  get isInitialized(): boolean {
+    return this.initialized;
   }
 
   private subscribeToAdapterEvents() {
@@ -117,7 +132,7 @@ export class PepperLogin {
       logger.error(
         'Pepper Login is not initialized yet! Please call init first.'
       );
-      return;
+      return null;
     }
 
     try {
@@ -130,24 +145,26 @@ export class PepperLogin {
         }
       );
 
-      if (localProvider && this.signer) {
-        // FIXME setup a new wallet and save it in current instance
-        // FIXME query user infos and save them in current instance
-        this.provider = localProvider;
+      if (localProvider) {
+        this.userInfo = await this.web3AuthInstance.getUserInfo();
+        this.#signer = new PepperWallet(this.adapter);
+        this.#provider = this.#signer.provider;
+        logger.debug('Current signer: ', this.#signer);
         await this.pepperLogin();
       }
     } catch (e) {
       logger.error('Error while connecting with google: ', e);
     }
 
-    return this.provider;
+    return this.#provider;
   }
 
   private async pepperLogin() {
-    // FIXME replace this condition with signer
-    if (!this.provider) {
-      logger.error('Cannot login with pepper without a signer');
+    if (!this.#signer) {
+      logger.error('Cannot login with pepper without a #signer');
+      return null;
     }
+    logger.info('Connecting with Pepper');
 
     // FIXME use proper value from web3Auth
     const userWeb3Login = {
@@ -162,7 +179,7 @@ export class PepperLogin {
       const nonce = initResponse['nonce'];
       const message = PERSONAL_SIGN_PREFIX + nonce;
 
-      // FIXME get proper signature from signer
+      // FIXME get proper signature from #signer
       const signature = message + 'signed';
 
       // FIXME get proper public key from real signature
