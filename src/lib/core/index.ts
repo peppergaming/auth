@@ -12,6 +12,8 @@ import {
   AUTH_METHODS,
   CHAIN_TYPE,
   LOGIN_PROVIDER_TYPE,
+  LOGIN_STATUS,
+  LOGIN_STATUS_TYPE,
   PEPPER_ACCESS_TOKEN_KEY,
   PERSONAL_SIGN_PREFIX,
 } from '../config/constants';
@@ -66,6 +68,7 @@ export class PepperLogin {
   private adapter: OpenloginAdapter | null;
   private storage = useStorage('local');
   private pepperApi: PepperApi;
+  private currentStatus: LOGIN_STATUS_TYPE = LOGIN_STATUS.NOT_READY;
   #provider: Provider = null;
   #signer: PepperWallet = null;
 
@@ -99,8 +102,9 @@ export class PepperLogin {
       this.subscribeToAdapterEvents();
       await this.web3Auth.init();
       this.initialized = true;
+      this.currentStatus = LOGIN_STATUS.READY;
       logger.info('Initialized Pepper Login');
-      logger.debug('Current web3Auth status: ', this.web3Auth.status);
+      logger.debug('Current web3Auth currentStatus: ', this.web3Auth.status);
     } catch (e) {
       logger.error('Error while initializing PepperLogin: ', e);
     }
@@ -118,22 +122,34 @@ export class PepperLogin {
     return this.#provider;
   }
 
+  get status() {
+    return this.currentStatus;
+  }
+
   private subscribeToAdapterEvents() {
     const web3Auth = this.web3Auth;
     web3Auth.on(ADAPTER_EVENTS.CONNECTING, () => {
+      this.currentStatus = LOGIN_STATUS.CONNECTING;
       logger.debug('Connecting');
     });
 
-    web3Auth.on(ADAPTER_EVENTS.CONNECTED, (data: CONNECTED_EVENT_DATA) => {
-      logger.info('Connected');
-      logger.debug('Connected with data: ', data);
-    });
+    web3Auth.on(
+      ADAPTER_EVENTS.CONNECTED,
+      async (data: CONNECTED_EVENT_DATA) => {
+        this.currentStatus = LOGIN_STATUS.CONNECTED;
+        await this.hydrateSession();
+        logger.info('Connected');
+        logger.debug('Connected with data: ', data);
+      }
+    );
 
     web3Auth.on(ADAPTER_EVENTS.DISCONNECTED, () => {
+      this.currentStatus = LOGIN_STATUS.READY;
       logger.debug('Disconnected');
     });
 
     web3Auth.on(ADAPTER_EVENTS.ERRORED, (error) => {
+      this.currentStatus = LOGIN_STATUS.READY;
       logger.error(error);
     });
   }
@@ -153,6 +169,10 @@ export class PepperLogin {
       return null;
     }
 
+    if (this.web3Auth.status === ADAPTER_STATUS.CONNECTED) {
+      logger.warn('Already connected');
+    }
+
     try {
       logger.debug('Trying to connect with: ', loginProvider);
       const localProvider = await this.web3Auth.connectTo(this.adapter.name, {
@@ -160,26 +180,51 @@ export class PepperLogin {
         loginHint,
       });
 
-      if (localProvider) {
-        const userInfo = await this.web3Auth.getUserInfo();
-        this.userInfo = {
-          ...defaultUserWeb3Profile,
-          ...userInfo,
-        };
-        console.debug('Current user info: ', this.userInfo);
-
-        this.#signer = new PepperWallet(this.adapter);
-        this.#provider = this.#signer.provider;
-        this.userInfo.publicAddress = this.#signer.address;
-        this.userInfo.publicKey = this.#signer.publicKey;
-        logger.debug('Current wallet: ', this.#signer);
-        await this.pepperLogin();
+      if (localProvider && this.currentStatus !== LOGIN_STATUS.HYDRATING) {
+        await this.hydrateSession();
       }
     } catch (e) {
       logger.error('Error while connecting with google: ', e);
     }
 
     return this.#signer;
+  }
+
+  private hydratePepper(accessToken: string) {
+    this.storage.setItem(PEPPER_ACCESS_TOKEN_KEY, accessToken);
+    this.pepperApi.setAccessToken(accessToken);
+    this.currentStatus = LOGIN_STATUS.PEPPER_CONNECTED;
+    logger.info('Logged with Pepper');
+  }
+
+  private async hydrateSession() {
+    if (this.currentStatus === LOGIN_STATUS.HYDRATING) {
+      return;
+    }
+    this.currentStatus = LOGIN_STATUS.HYDRATING;
+
+    const userInfo = await this.web3Auth.getUserInfo();
+    this.userInfo = {
+      ...defaultUserWeb3Profile,
+      ...userInfo,
+    };
+    console.debug('Current user info: ', this.userInfo);
+
+    this.#signer = new PepperWallet(this.adapter);
+    this.#provider = this.#signer.provider;
+    this.userInfo.publicAddress = this.#signer.address;
+    this.userInfo.publicKey = this.#signer.publicKey;
+    logger.debug('Current wallet: ', this.#signer);
+
+    const pepperAccessToken = this.storage.getItem(PEPPER_ACCESS_TOKEN_KEY);
+
+    if (pepperAccessToken) {
+      this.hydratePepper(pepperAccessToken);
+    } else {
+      await this.pepperLogin();
+    }
+
+    await this.pepperLogin();
   }
 
   private async pepperLogin() {
@@ -190,6 +235,7 @@ export class PepperLogin {
     logger.debug('Logging with Pepper');
 
     try {
+      this.currentStatus = LOGIN_STATUS.PEPPER_INIT;
       const userWeb3Login = {
         address: this.userInfo.publicAddress,
         auth_method: AUTH_METHODS[this.userInfo.typeOfLogin] || '',
@@ -199,6 +245,8 @@ export class PepperLogin {
       };
       const initResponse = await this.pepperApi.postWeb3Init(userWeb3Login);
       if (initResponse && initResponse['nonce']) {
+        this.currentStatus = LOGIN_STATUS.PEPPER_VERIFY;
+
         const nonce = initResponse['nonce'];
         const message = PERSONAL_SIGN_PREFIX + nonce;
 
@@ -217,13 +265,12 @@ export class PepperLogin {
 
         if (verifyResponse && verifyResponse['access_token']) {
           const accessToken = verifyResponse['access_token'];
-          this.storage.setItem(PEPPER_ACCESS_TOKEN_KEY, accessToken);
-          this.pepperApi.setAccessToken(accessToken);
-          logger.info('Logged with Pepper');
+          this.hydratePepper(accessToken);
         }
       }
     } catch (e) {
       logger.error('Error while logging with pepper: ', e);
+      this.currentStatus = LOGIN_STATUS.READY;
     }
   }
 
@@ -238,7 +285,7 @@ export class PepperLogin {
     } catch (e) {
       // console.error("Could not log out web3auth: ", e);
     }
-
+    this.currentStatus = LOGIN_STATUS.READY;
     this.storage.removeItem(PEPPER_ACCESS_TOKEN_KEY);
     this.pepperApi.setAccessToken(null);
   }
