@@ -166,7 +166,7 @@ export class PepperLogin {
       logger.error(
         'Pepper Login is not initialized yet! Please call init first.'
       );
-      logger.debug("Current web3auth: ", this.web3Auth)
+      // logger.debug('Current web3auth: ', this.web3Auth);
       return null;
     }
 
@@ -282,10 +282,9 @@ export class PepperLogin {
       if (this.web3Auth && this.web3Auth.status === ADAPTER_STATUS.CONNECTED) {
         await this.web3Auth.logout({ cleanup: false });
       }
-      if (this.adapter && this.adapter.status === ADAPTER_STATUS.CONNECTED){
+      if (this.adapter && this.adapter.status === ADAPTER_STATUS.CONNECTED) {
         await this.adapter.disconnect();
       }
-
     } catch (e) {
       // console.error("Could not log out web3auth: ", e);
     }
