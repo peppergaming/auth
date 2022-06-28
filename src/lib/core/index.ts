@@ -165,7 +165,7 @@ export class PepperLogin {
       logger.error(
         'Pepper Login is not initialized yet! Please call init first.'
       );
-      logger.debug('Current web3auth: ', this.web3Auth);
+      // logger.debug('Current web3auth: ', this.web3Auth);
       return null;
     }
 
