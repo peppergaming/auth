@@ -3,7 +3,7 @@ import {
   ADAPTER_EVENTS,
   ADAPTER_STATUS,
   CONNECTED_EVENT_DATA,
-  UserInfo,
+  UserInfo
 } from '@web3auth/base';
 import { Web3AuthCore } from '@web3auth/core';
 import { OpenloginAdapter } from '@web3auth/openlogin-adapter';
@@ -15,12 +15,12 @@ import {
   LOGIN_STATUS,
   LOGIN_STATUS_TYPE,
   PEPPER_ACCESS_TOKEN_KEY,
-  PERSONAL_SIGN_PREFIX,
+  PERSONAL_SIGN_PREFIX
 } from '../config/constants';
 import logger, {
   DEFAULT_LEVEL,
   LogLevel,
-  setLoggerLevel,
+  setLoggerLevel
 } from '../config/logger';
 import { PepperApi } from '../pepperApi';
 import { useStorage } from '../util';
@@ -41,7 +41,7 @@ const defaultPepperLoginOptions: PepperLoginOptions = {
   clientId: undefined,
   logLevel: DEFAULT_LEVEL,
   isMobile: false,
-  isDevelopment: false,
+  isDevelopment: false
 };
 
 export interface UserWeb3Profile extends Partial<UserInfo> {
@@ -55,7 +55,7 @@ const defaultUserWeb3Profile: UserWeb3Profile = {
   name: '',
   typeOfLogin: '',
   email: '',
-  verifierId: '',
+  verifierId: ''
 };
 
 export class PepperLogin {
@@ -72,7 +72,6 @@ export class PepperLogin {
   #provider: Provider = null;
   #signer: PepperWallet = null;
 
-  // TODO implement re-hydration
   constructor(options?: Partial<PepperLoginOptions>) {
     this.options = defaultPepperLoginOptions;
     if (options) {
@@ -81,13 +80,13 @@ export class PepperLogin {
     setLoggerLevel(this.options.logLevel || DEFAULT_LEVEL);
 
     this.web3Auth = new Web3AuthCore({
-      chainConfig: { chainNamespace: 'other' },
+      chainConfig: { chainNamespace: 'other' }
     });
     this.adapter = null;
     const pepperAccessToken = this.storage.getItem(PEPPER_ACCESS_TOKEN_KEY);
     this.pepperApi = new PepperApi({
       accessToken: pepperAccessToken,
-      isDevelopment: this.options.isDevelopment,
+      isDevelopment: this.options.isDevelopment
     });
     this.initialized = false;
     logger.info('Created pepper login instance');
@@ -166,7 +165,7 @@ export class PepperLogin {
       logger.error(
         'Pepper Login is not initialized yet! Please call init first.'
       );
-      logger.debug("Current web3auth: ", this.web3Auth)
+      logger.debug('Current web3auth: ', this.web3Auth);
       return null;
     }
 
@@ -177,10 +176,13 @@ export class PepperLogin {
 
     try {
       logger.debug('Trying to connect with: ', loginProvider);
-      const localProvider = await this.web3Auth.connectTo(this.adapter.name, {
+      const loginParams = {
         loginProvider,
-        loginHint,
-      });
+        login_hint: loginHint
+      };
+      logger.debug('Login params: ', loginParams);
+
+      const localProvider = await this.web3Auth.connectTo(this.adapter.name, loginParams);
 
       if (localProvider && this.currentStatus !== LOGIN_STATUS.HYDRATING) {
         await this.hydrateSession();
@@ -208,7 +210,7 @@ export class PepperLogin {
     const userInfo = await this.web3Auth.getUserInfo();
     this.userInfo = {
       ...defaultUserWeb3Profile,
-      ...userInfo,
+      ...userInfo
     };
     console.debug('Current user info: ', this.userInfo);
 
@@ -243,7 +245,7 @@ export class PepperLogin {
         auth_method: AUTH_METHODS[this.userInfo.typeOfLogin] || '',
         email: this.userInfo.email,
         username: this.userInfo.name,
-        web3_identifier: this.userInfo.verifierId || '',
+        web3_identifier: this.userInfo.verifierId || ''
       };
       const initResponse = await this.pepperApi.postWeb3Init(userWeb3Login);
       if (initResponse && initResponse['nonce']) {
@@ -259,7 +261,7 @@ export class PepperLogin {
           address: this.userInfo.publicAddress || '',
           // signature: signatureCompact || "",
           signature: signature || '',
-          message_prefix: PERSONAL_SIGN_PREFIX,
+          message_prefix: PERSONAL_SIGN_PREFIX
         };
         const verifyResponse = await this.pepperApi.postWeb3Verify(
           userWeb3Verify
@@ -282,7 +284,7 @@ export class PepperLogin {
       if (this.web3Auth && this.web3Auth.status === ADAPTER_STATUS.CONNECTED) {
         await this.web3Auth.logout({ cleanup: false });
       }
-      if (this.adapter && this.adapter.status === ADAPTER_STATUS.CONNECTED){
+      if (this.adapter && this.adapter.status === ADAPTER_STATUS.CONNECTED) {
         await this.adapter.disconnect();
       }
 
