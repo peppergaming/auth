@@ -28,17 +28,17 @@ import { PepperWallet } from '../wallet';
 
 import { getOpenLoginAdapter, UX_MODE_TYPE } from './adapters';
 
-export interface PepperLoginOptions<T extends Web3AuthCore> {
+export interface PepperLoginOptions {
   chainType?: typeof CHAIN_TYPE[keyof typeof CHAIN_TYPE];
   clientId?: string;
   logLevel?: LogLevel;
   isMobile?: boolean;
   isDevelopment?: boolean;
-  web3Auth?: T;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  web3Auth?: any;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const defaultPepperLoginOptions: PepperLoginOptions<any> = {
+const defaultPepperLoginOptions: PepperLoginOptions = {
   chainType: CHAIN_TYPE.EVM,
   clientId: undefined,
   logLevel: DEFAULT_LEVEL,
@@ -60,9 +60,10 @@ const defaultUserWeb3Profile: UserWeb3Profile = {
   verifierId: '',
 };
 
-export class PepperLogin<T extends Web3AuthCore> {
-  readonly options: PepperLoginOptions<T>;
-  readonly web3Auth: T | Web3AuthCore;
+export class PepperLogin {
+  readonly options: PepperLoginOptions;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  readonly web3Auth: Web3AuthCore | any;
 
   private userInfo: UserWeb3Profile = defaultUserWeb3Profile;
   private initialized = false;
@@ -74,7 +75,7 @@ export class PepperLogin<T extends Web3AuthCore> {
   #provider: Provider = null;
   #signer: PepperWallet = null;
 
-  constructor(options?: Partial<PepperLoginOptions<T>>) {
+  constructor(options?: Partial<PepperLoginOptions>) {
     this.options = defaultPepperLoginOptions;
     if (options) {
       this.options = { ...defaultPepperLoginOptions, ...options };
@@ -102,6 +103,7 @@ export class PepperLogin<T extends Web3AuthCore> {
   public async init() {
     if (this.initialized) {
       logger.info('Initialized Pepper Login');
+      return;
     }
 
     const uxMode: UX_MODE_TYPE = this.options.isMobile ? 'redirect' : 'popup';
