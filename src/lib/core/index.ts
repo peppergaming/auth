@@ -4,6 +4,7 @@ import {
   ADAPTER_STATUS,
   CONNECTED_EVENT_DATA,
   UserInfo,
+  WALLET_ADAPTERS,
 } from '@web3auth/base';
 import { Web3AuthCore } from '@web3auth/core';
 import { OpenloginAdapter } from '@web3auth/openlogin-adapter';
@@ -83,7 +84,7 @@ export class PepperLogin {
     setLoggerLevel(this.options.logLevel || DEFAULT_LEVEL);
     if (this.options.web3Auth) {
       this.web3Auth = this.options.web3Auth;
-      this.initialized = true;
+      this.adapter = this.web3Auth.walletAdapters[WALLET_ADAPTERS.OPENLOGIN];
     } else {
       this.web3Auth = new Web3AuthCore({
         chainConfig: { chainNamespace: 'other' },
