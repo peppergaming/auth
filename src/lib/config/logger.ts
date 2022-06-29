@@ -6,6 +6,8 @@ export type LogLevel = log.LogLevelDesc;
 export const DEFAULT_LEVEL: LogLevel = 'error';
 export const LOGGER_PREFIX = 'pepper';
 
+logPrefix.reg(log);
+
 logPrefix.apply(log, {
   format(level, name, timestamp) {
     return `[${timestamp}] ${level} ${name}:`;
