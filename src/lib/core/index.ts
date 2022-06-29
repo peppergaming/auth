@@ -206,6 +206,9 @@ export class PepperLogin {
       if (this.web3Auth.loginModal) {
           this.web3Auth.loginModal.closeModal();
       }
+      this.currentStatus = LOGIN_STATUS.READY;
+      this.adapter.status = ADAPTER_STATUS.READY;
+      this.web3Auth.status = ADAPTER_STATUS.READY;
     }
     return this.#signer;
   }
