@@ -101,18 +101,15 @@ export class PepperLogin {
   }
 
   public async init() {
-    if (this.initialized) {
-      logger.info('Initialized Pepper Login');
-      return;
-    }
-
     const uxMode: UX_MODE_TYPE = this.options.isMobile ? 'redirect' : 'popup';
     try {
-      const openLoginAdapter = await getOpenLoginAdapter(uxMode);
-      this.adapter = openLoginAdapter;
-      this.web3Auth.configureAdapter(openLoginAdapter);
-      this.subscribeToAdapterEvents();
-      await this.web3Auth.init();
+      if (this.web3Auth && this.web3Auth.status !== ADAPTER_STATUS.READY) {
+        const openLoginAdapter = await getOpenLoginAdapter(uxMode);
+        this.adapter = openLoginAdapter;
+        this.web3Auth.configureAdapter(openLoginAdapter);
+        this.subscribeToAdapterEvents();
+        await this.web3Auth.init();
+      }
       this.initialized = true;
       this.currentStatus = LOGIN_STATUS.READY;
       logger.info('Initialized Pepper Login');
