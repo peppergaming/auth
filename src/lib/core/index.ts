@@ -65,6 +65,7 @@ export class PepperLogin {
   readonly options: PepperLoginOptions;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly web3Auth: Web3AuthCore | any;
+  private loginToken: string | null;
 
   private userInfo: UserWeb3Profile = defaultUserWeb3Profile;
   private initialized = false;
@@ -97,6 +98,7 @@ export class PepperLogin {
       });
       this.initialized = false;
     }
+    this.loginToken = null;
 
     logger.info('Created pepper login instance');
   }
@@ -171,7 +173,8 @@ export class PepperLogin {
 
   public async connectTo(
     loginProvider: LOGIN_PROVIDER_TYPE,
-    loginHint?: string
+    loginHint?: string,
+    loginToken?: string
   ) {
     if (isElectron()) {
       const oauthPath = getPepperOauthURL(this.options.isDevelopment);
@@ -190,6 +193,10 @@ export class PepperLogin {
       );
       // logger.debug('Current web3auth: ', this.web3Auth);
       return null;
+    }
+
+    if (loginToken) {
+      this.loginToken = loginToken;
     }
 
     if (this.web3Auth.status === ADAPTER_STATUS.CONNECTED) {
@@ -229,6 +236,7 @@ export class PepperLogin {
     this.storage.setItem(PEPPER_ACCESS_TOKEN_KEY, accessToken);
     this.pepperApi.setAccessToken(accessToken);
     this.currentStatus = LOGIN_STATUS.PEPPER_CONNECTED;
+    this.loginToken = null;
     logger.info('Logged with Pepper');
   }
 
@@ -253,13 +261,11 @@ export class PepperLogin {
 
     const pepperAccessToken = this.storage.getItem(PEPPER_ACCESS_TOKEN_KEY);
 
-    if (pepperAccessToken) {
+    if (pepperAccessToken && !this.loginToken) {
       this.hydratePepper(pepperAccessToken);
     } else {
       await this.pepperLogin();
     }
-
-    await this.pepperLogin();
   }
 
   private async pepperLogin() {
@@ -277,6 +283,7 @@ export class PepperLogin {
         email: this.userInfo.email,
         username: this.userInfo.name,
         web3_identifier: this.userInfo.verifierId || '',
+        login_token: this.loginToken || undefined,
       };
       const initResponse = await this.pepperApi.postWeb3Init(userWeb3Login);
       if (initResponse && initResponse['nonce']) {
@@ -323,6 +330,7 @@ export class PepperLogin {
     }
     this.currentStatus = LOGIN_STATUS.READY;
     this.storage.removeItem(PEPPER_ACCESS_TOKEN_KEY);
+    this.loginToken = null;
     this.pepperApi.setAccessToken(null);
   }
 }

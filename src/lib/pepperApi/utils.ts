@@ -41,6 +41,7 @@ export type UserWeb3Login = {
   web3_identifier?: string;
   email?: string;
   username?: string;
+  login_token?: string;
 };
 
 export type UserWeb3Verify = {
