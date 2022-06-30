@@ -31,6 +31,11 @@ export type LOGIN_STATUS_TYPE = typeof LOGIN_STATUS[keyof typeof LOGIN_STATUS];
 export const PEPPER_API_DEV_URL = 'https://dev-nm.e2bs.ch/api';
 export const PEPPER_API_PROD_URL = 'https://api-pepper.zone/api';
 
+export const PEPPER_APP_DEV_URL = 'https://dev-app.e2bs.ch';
+export const PEPPER_APP_PROD_URL = 'https://app.peppergaming.com';
+
+export const PEPPER_APP_OAUTH_PATH = 'oauth';
+
 export const PEPPER_ACCESS_TOKEN_KEY = 'PEPPER_ACCESS_TOKEN';
 
 export const PERSONAL_SIGN_PREFIX =

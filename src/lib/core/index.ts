@@ -1,4 +1,4 @@
-import {Provider} from '@ethersproject/providers';
+import { Provider } from '@ethersproject/providers';
 import {
   ADAPTER_EVENTS,
   ADAPTER_STATUS,
@@ -6,8 +6,8 @@ import {
   UserInfo,
   WALLET_ADAPTERS,
 } from '@web3auth/base';
-import {Web3AuthCore} from '@web3auth/core';
-import {OpenloginAdapter} from '@web3auth/openlogin-adapter';
+import { Web3AuthCore } from '@web3auth/core';
+import { OpenloginAdapter } from '@web3auth/openlogin-adapter';
 
 import {
   AUTH_METHODS,
@@ -23,11 +23,11 @@ import logger, {
   LogLevel,
   setLoggerLevel,
 } from '../config/logger';
-import {PepperApi} from '../pepperApi';
-import {useStorage} from '../util';
-import {PepperWallet} from '../wallet';
+import { PepperApi } from '../pepperApi';
+import { getPepperOauthURL, isElectron, useStorage } from '../util';
+import { PepperWallet } from '../wallet';
 
-import {getOpenLoginAdapter, UX_MODE_TYPE} from './adapters';
+import { getOpenLoginAdapter, UX_MODE_TYPE } from './adapters';
 
 export interface PepperLoginOptions {
   chainType?: typeof CHAIN_TYPE[keyof typeof CHAIN_TYPE];
@@ -79,7 +79,7 @@ export class PepperLogin {
   constructor(options?: Partial<PepperLoginOptions>) {
     this.options = defaultPepperLoginOptions;
     if (options) {
-      this.options = {...defaultPepperLoginOptions, ...options};
+      this.options = { ...defaultPepperLoginOptions, ...options };
     }
     setLoggerLevel(this.options.logLevel || DEFAULT_LEVEL);
     if (this.options.web3Auth) {
@@ -87,7 +87,7 @@ export class PepperLogin {
       this.adapter = this.web3Auth.walletAdapters[WALLET_ADAPTERS.OPENLOGIN];
     } else {
       this.web3Auth = new Web3AuthCore({
-        chainConfig: {chainNamespace: 'other'},
+        chainConfig: { chainNamespace: 'other' },
       });
       this.adapter = null;
       const pepperAccessToken = this.storage.getItem(PEPPER_ACCESS_TOKEN_KEY);
@@ -102,6 +102,11 @@ export class PepperLogin {
   }
 
   public async init() {
+    if (isElectron()) {
+      this.initialized = true;
+      return;
+    }
+
     const uxMode: UX_MODE_TYPE = this.options.isMobile ? 'redirect' : 'popup';
     try {
       if (this.web3Auth && this.web3Auth.status !== ADAPTER_STATUS.READY) {
@@ -168,6 +173,13 @@ export class PepperLogin {
     loginProvider: LOGIN_PROVIDER_TYPE,
     loginHint?: string
   ) {
+    if (isElectron()) {
+      const oauthPath = getPepperOauthURL(this.options.isDevelopment);
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const electron = require('electron');
+      electron.shell.openExternal(oauthPath);
+    }
+
     if (
       !this.initialized ||
       !this.adapter ||
@@ -204,7 +216,7 @@ export class PepperLogin {
     } catch (e) {
       logger.error('Error while connecting with google: ', e);
       if (this.web3Auth.loginModal) {
-          this.web3Auth.loginModal.closeModal();
+        this.web3Auth.loginModal.closeModal();
       }
       this.currentStatus = LOGIN_STATUS.READY;
       this.adapter.status = ADAPTER_STATUS.READY;
@@ -301,7 +313,7 @@ export class PepperLogin {
     logger.warn('Logging out');
     try {
       if (this.web3Auth && this.web3Auth.status === ADAPTER_STATUS.CONNECTED) {
-        await this.web3Auth.logout({cleanup: false});
+        await this.web3Auth.logout({ cleanup: false });
       }
       if (this.adapter && this.adapter.status === ADAPTER_STATUS.CONNECTED) {
         await this.adapter.disconnect();
