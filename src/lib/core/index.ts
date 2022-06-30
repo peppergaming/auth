@@ -24,7 +24,7 @@ import logger, {
   setLoggerLevel,
 } from '../config/logger';
 import { PepperApi } from '../pepperApi';
-import { getPepperOauthURL, isElectron, useStorage } from '../util';
+import { isElectron, useStorage } from '../util';
 import { PepperWallet } from '../wallet';
 
 import { getOpenLoginAdapter, UX_MODE_TYPE } from './adapters';
@@ -177,10 +177,12 @@ export class PepperLogin {
     loginToken?: string
   ) {
     if (isElectron()) {
-      const oauthPath = getPepperOauthURL(this.options.isDevelopment);
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const electron = require('electron');
-      electron.shell.openExternal(oauthPath);
+      // const oauthPath = getPepperOauthURL(this.options.isDevelopment);
+      // // eslint-disable-next-line @typescript-eslint/no-var-requires
+      // const electron = require('electron');
+      // electron.shell.openExternal(oauthPath);
+      console.debug("Support for electron not available yet")
+      return null;
     }
 
     if (
