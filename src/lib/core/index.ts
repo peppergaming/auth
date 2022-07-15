@@ -143,6 +143,10 @@ export class PepperLogin {
     return this.currentStatus;
   }
 
+  get pepperAccessToken(){
+    return this.storage.getItem(PEPPER_ACCESS_TOKEN_KEY)
+  }
+
   private subscribeToAdapterEvents() {
     const web3Auth = this.web3Auth;
     web3Auth.on(ADAPTER_EVENTS.CONNECTING, () => {
