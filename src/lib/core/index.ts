@@ -30,8 +30,6 @@ import { PepperWallet } from '../wallet';
 import { EventSubscriber } from './EventSubscriber';
 import { getOpenLoginAdapter, UX_MODE_TYPE } from './adapters';
 
-export { EventSubscriber };
-
 export interface PepperLoginOptions {
   chainType?: typeof CHAIN_TYPE[keyof typeof CHAIN_TYPE];
   clientId?: string;
