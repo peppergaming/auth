@@ -1,33 +1,36 @@
 import { TransactionRequest } from '@ethersproject/abstract-provider';
 import { Bytes } from '@ethersproject/bytes';
-import { ProgressCallback } from '@ethersproject/json-wallets';
+import { JsonRpcSigner } from '@ethersproject/providers';
 import { OpenloginAdapter } from '@web3auth/openlogin-adapter';
-import { Wallet } from 'ethers';
+import { Signer, Wallet } from 'ethers';
 
 import logger from '../config/logger';
 
-export class PepperWallet {
-  readonly #wallet: Wallet;
+export abstract class PepperWallet {
+  readonly #wallet: Signer;
+  private _address: string;
+  private _publicKey: string;
 
-  constructor(adapter: OpenloginAdapter) {
-    if (
-      !adapter ||
-      !adapter.openloginInstance ||
-      !(adapter.openloginInstance.privKey.length > 0)
-    ) {
-      logger.debug('Pepper wallet received an invalid adapter: ', adapter);
-      throw new Error('Unable to instantiate Pepper Wallet');
-    }
-
-    this.#wallet = new Wallet(`0x${adapter.openloginInstance.privKey}`);
+  protected constructor(wallet: Signer, address = '', publicKey = '') {
+    this.#wallet = wallet;
+    this._address = address;
+    this._publicKey = publicKey;
   }
 
   get address() {
-    return this.#wallet.address;
+    return this._address;
+  }
+
+  set address(address) {
+    this._address = address;
   }
 
   get publicKey() {
-    return this.#wallet.publicKey;
+    return this._publicKey;
+  }
+
+  set publicKey(publicKey) {
+    this._publicKey = publicKey;
   }
 
   get provider() {
@@ -41,13 +44,25 @@ export class PepperWallet {
   async signMessage(message: Bytes | string): Promise<string> {
     return await this.#wallet.signMessage(message);
   }
+}
 
-  async encrypt(
-    password: Bytes | string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    options?: any,
-    progressCallback?: ProgressCallback
-  ): Promise<string> {
-    return await this.#wallet.encrypt(password, options, progressCallback);
+export class InternalWallet extends PepperWallet {
+  constructor(adapter: OpenloginAdapter) {
+    if (
+      !adapter ||
+      !adapter.openloginInstance ||
+      !(adapter.openloginInstance.privKey.length > 0)
+    ) {
+      logger.debug('Pepper wallet received an invalid adapter: ', adapter);
+      throw new Error('Unable to instantiate Pepper Wallet');
+    }
+    const wallet = new Wallet(`0x${adapter.openloginInstance.privKey}`);
+    super(wallet, wallet.address, wallet.publicKey);
+  }
+}
+
+export class ExternalWallet extends PepperWallet {
+  constructor(signer: JsonRpcSigner) {
+    super(signer);
   }
 }

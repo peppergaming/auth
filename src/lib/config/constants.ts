@@ -37,6 +37,7 @@ export const PEPPER_APP_PROD_URL = 'https://app.peppergaming.com';
 export const PEPPER_APP_OAUTH_PATH = 'oauth';
 
 export const PEPPER_ACCESS_TOKEN_KEY = 'PEPPER_ACCESS_TOKEN';
+export const PEPPER_CACHED_WALLET_KEY = 'PEPPER_CACHED_WALLET_KEY';
 
 export const PERSONAL_SIGN_PREFIX =
   'Please sign this message to verify your identity: ';
