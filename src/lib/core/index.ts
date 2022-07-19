@@ -27,7 +27,10 @@ import { PepperApi } from '../pepperApi';
 import { isElectron, useStorage } from '../util';
 import { PepperWallet } from '../wallet';
 
+import { EventSubscriber } from './EventSubscriber';
 import { getOpenLoginAdapter, UX_MODE_TYPE } from './adapters';
+
+export { EventSubscriber };
 
 export interface PepperLoginOptions {
   chainType?: typeof CHAIN_TYPE[keyof typeof CHAIN_TYPE];
@@ -35,6 +38,7 @@ export interface PepperLoginOptions {
   logLevel?: LogLevel;
   isMobile?: boolean;
   isDevelopment?: boolean;
+  eventSubscriber?: EventSubscriber;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   web3Auth?: any;
 }
@@ -73,9 +77,10 @@ export class PepperLogin {
   private adapter: OpenloginAdapter | null;
   private storage = useStorage('local');
   private pepperApi?: PepperApi;
+  private subscriber?: EventSubscriber;
   private currentStatus: LOGIN_STATUS_TYPE = LOGIN_STATUS.NOT_READY;
-  #provider?: Provider;
-  #signer?: PepperWallet;
+  #provider: Provider = null;
+  #signer: PepperWallet = null;
 
   constructor(options?: Partial<PepperLoginOptions>) {
     this.options = defaultPepperLoginOptions;
@@ -99,6 +104,7 @@ export class PepperLogin {
       this.initialized = false;
     }
     this.loginToken = null;
+    this.subscriber = this.options.eventSubscriber;
 
     logger.info('Created pepper login instance');
   }
@@ -127,7 +133,7 @@ export class PepperLogin {
     }
   }
 
-  get getUserInfo(): Partial<UserInfo> | null {
+  get getUserInfo(): Partial<UserWeb3Profile> | null {
     return this.userInfo;
   }
 
@@ -147,10 +153,15 @@ export class PepperLogin {
     return this.storage.getItem(PEPPER_ACCESS_TOKEN_KEY);
   }
 
+  set eventSubscriber(eventSubscriber: EventSubscriber) {
+    this.subscriber = eventSubscriber;
+  }
+
   private subscribeToAdapterEvents() {
     const web3Auth = this.web3Auth;
-    web3Auth.on(ADAPTER_EVENTS.CONNECTING, () => {
+    web3Auth.on(ADAPTER_EVENTS.CONNECTING, async () => {
       this.currentStatus = LOGIN_STATUS.CONNECTING;
+      await this.subscriber?.onConnecting();
       logger.debug('Connecting');
     });
 
@@ -164,13 +175,17 @@ export class PepperLogin {
       }
     );
 
-    web3Auth.on(ADAPTER_EVENTS.DISCONNECTED, () => {
+    web3Auth.on(ADAPTER_EVENTS.DISCONNECTED, async () => {
       this.currentStatus = LOGIN_STATUS.READY;
+      await this.subscriber?.onDisconnected();
+
       logger.debug('Disconnected');
     });
 
-    web3Auth.on(ADAPTER_EVENTS.ERRORED, (error) => {
+    web3Auth.on(ADAPTER_EVENTS.ERRORED, async (error) => {
       this.currentStatus = LOGIN_STATUS.READY;
+      await this.subscriber?.onErrored(error);
+
       logger.error(error);
     });
   }
@@ -238,11 +253,14 @@ export class PepperLogin {
     return this.#signer;
   }
 
-  private hydratePepper(accessToken: string) {
+  private async hydratePepper(accessToken: string) {
     this.storage.setItem(PEPPER_ACCESS_TOKEN_KEY, accessToken);
     this.pepperApi.setAccessToken(accessToken);
     this.currentStatus = LOGIN_STATUS.PEPPER_CONNECTED;
     this.loginToken = null;
+    if (this.subscriber) {
+      await this.subscriber.onConnected(this.userInfo);
+    }
     logger.info('Logged with Pepper');
   }
 
@@ -318,7 +336,7 @@ export class PepperLogin {
 
         if (verifyResponse && verifyResponse['access_token']) {
           const accessToken = verifyResponse['access_token'];
-          this.hydratePepper(accessToken);
+          await this.hydratePepper(accessToken);
         }
       }
     } catch (e) {
