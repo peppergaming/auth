@@ -69,7 +69,7 @@ export class PepperLogin {
   readonly options: PepperLoginOptions;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly web3Auth: Web3AuthCore | any;
-  private loginToken: string | null;
+  private loginToken?: string | null;
 
   private userInfo: UserWeb3Profile = defaultUserWeb3Profile;
   private initialized = false;
@@ -288,6 +288,7 @@ export class PepperLogin {
     // logger.debug("Current wallet: ", this.#signer);
 
     const pepperAccessToken = this.storage.getItem(PEPPER_ACCESS_TOKEN_KEY);
+    logger.debug('pepperAccessToken: ', pepperAccessToken);
 
     if (pepperAccessToken && !this.loginToken) {
       await this.hydratePepper(pepperAccessToken);
@@ -312,7 +313,7 @@ export class PepperLogin {
         email: this.userInfo.email,
         username: this.userInfo.name,
         web3_identifier: this.userInfo.verifierId || '',
-        login_token: this.loginToken || undefined,
+        login_token: this.loginToken,
       };
       const initResponse = await this.pepperApi.postWeb3Init(userWeb3Login);
       if (initResponse && initResponse['nonce']) {
@@ -345,6 +346,12 @@ export class PepperLogin {
     }
   }
 
+  public async refreshPepperLogin(loginToken?: string) {
+    this.loginToken = loginToken;
+    await this.pepperLogin();
+    return this.#signer;
+  }
+
   public async logout() {
     logger.warn('Logging out');
     try {
@@ -355,7 +362,7 @@ export class PepperLogin {
         await this.adapter.disconnect();
       }
     } catch (e) {
-      // console.error("Could not log out web3auth: ", e);
+      logger.error('Error while logging out: ', e);
     }
     this.currentStatus = LOGIN_STATUS.READY;
     this.storage.removeItem(PEPPER_ACCESS_TOKEN_KEY);
