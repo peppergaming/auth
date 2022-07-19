@@ -69,7 +69,7 @@ export class PepperLogin {
   readonly options: PepperLoginOptions;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly web3Auth: Web3AuthCore | any;
-  private loginToken?: string | null;
+  private loginToken?: string;
 
   private userInfo: UserWeb3Profile = defaultUserWeb3Profile;
   private initialized = false;
@@ -313,7 +313,7 @@ export class PepperLogin {
         email: this.userInfo.email,
         username: this.userInfo.name,
         web3_identifier: this.userInfo.verifierId || '',
-        login_token: this.loginToken,
+        login_token: this.loginToken || undefined,
       };
       const initResponse = await this.pepperApi.postWeb3Init(userWeb3Login);
       if (initResponse && initResponse['nonce']) {
