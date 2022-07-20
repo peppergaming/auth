@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
+
 import { Provider, Web3Provider } from '@ethersproject/providers';
 import { CONNECTED_EVENT_DATA, UserInfo } from '@web3auth/base';
 import { Web3AuthCore } from '@web3auth/core';
@@ -17,12 +19,12 @@ import {
   PEPPER_METAMASK,
   PEPPER_WALLETCONNECT,
   PERSONAL_SIGN_PREFIX,
-  WALLET_CONNECT_KEY,
+  WALLET_CONNECT_KEY
 } from '../config/constants';
 import logger, {
   DEFAULT_LEVEL,
   LogLevel,
-  setLoggerLevel,
+  setLoggerLevel
 } from '../config/logger';
 import { PepperApi } from '../pepperApi';
 import { generateNickname, isElectron, useStorage } from '../utils';
@@ -32,14 +34,15 @@ import {
   MetaMaskAdapter,
   openLoginAdapterBuilder,
   UX_MODE_TYPE,
-  WalletConnectAdapter,
+  WalletConnectAdapter
 } from './adapters';
 
 export interface EventSubscriber {
-  onConnecting: () => Promise<void>;
-  onConnected: (userInfo, pepperAccessToken) => Promise<void>;
-  onDisconnected: () => Promise<void>;
-  onErrored: (error) => Promise<void>;
+  onConnecting?: () => Promise<void>;
+  onAuthChallengeSigning?: () => Promise<void>;
+  onConnected?: (userInfo, pepperAccessToken) => Promise<void>;
+  onDisconnected?: () => Promise<void>;
+  onErrored?: (error) => Promise<void>;
 }
 
 export interface PepperLoginOptions {
@@ -51,18 +54,33 @@ export interface PepperLoginOptions {
   eventSubscriber?: EventSubscriber;
 }
 
+export interface UserWeb3Profile extends Partial<UserInfo> {
+  publicAddress: string | null;
+  publicKey: string | null;
+}
+
+const defaultEventSubscriber: EventSubscriber = {
+  onConnecting: async () => {
+  },
+  onAuthChallengeSigning: async () => {
+  },
+  onConnected: async () => {
+  },
+  onDisconnected: async () => {
+  },
+  onErrored: async () => {
+  }
+};
+
+
 const defaultPepperLoginOptions: PepperLoginOptions = {
   chainType: CHAIN_TYPE.EVM,
   clientId: undefined,
   logLevel: DEFAULT_LEVEL,
   isMobile: false,
-  isDevelopment: false,
+  isDevelopment: false
 };
 
-export interface UserWeb3Profile extends Partial<UserInfo> {
-  publicAddress: string | null;
-  publicKey: string | null;
-}
 
 const defaultUserWeb3Profile: UserWeb3Profile = {
   publicAddress: null,
@@ -70,7 +88,7 @@ const defaultUserWeb3Profile: UserWeb3Profile = {
   name: '',
   typeOfLogin: '',
   email: undefined,
-  verifierId: '',
+  verifierId: ''
 };
 
 export class PepperLogin {
@@ -100,17 +118,20 @@ export class PepperLogin {
       this.options = { ...defaultPepperLoginOptions, ...options };
     }
     setLoggerLevel(this.options.logLevel || DEFAULT_LEVEL);
-    this.subscriber = this.options.eventSubscriber;
+
+    if (this.options.eventSubscriber) {
+      this.subscriber = { ...defaultEventSubscriber, ...this.options.eventSubscriber };
+    }
 
     const pepperAccessToken = this.storage.getItem(PEPPER_ACCESS_TOKEN_KEY);
     this.pepperApi = new PepperApi({
       accessToken: pepperAccessToken,
-      isDevelopment: this.options.isDevelopment,
+      isDevelopment: this.options.isDevelopment
     });
 
     this.initialized = false;
     this.web3Auth = new Web3AuthCore({
-      chainConfig: { chainNamespace: 'other' },
+      chainConfig: { chainNamespace: 'other' }
     });
     this.externalWalletConnection = this.externalWalletConnection.bind(this);
     this.onWalletConnectConnection = this.onWalletConnectConnection.bind(this);
@@ -144,7 +165,7 @@ export class PepperLogin {
       } else {
         walletConnectSettings = {
           connected: false,
-          bridge: 'https://bridge.walletconnect.org',
+          bridge: 'https://bridge.walletconnect.org'
         };
       }
 
@@ -271,7 +292,7 @@ export class PepperLogin {
       logger.debug('Trying to connect with: ', loginProvider);
       const loginParams = {
         loginProvider,
-        login_hint: loginHint,
+        login_hint: loginHint
       };
       // logger.debug('Login params: ', loginParams);
 
@@ -311,7 +332,7 @@ export class PepperLogin {
       name: generateNickname(null, address.substring(2, 5)),
       typeOfLogin: 'wallet',
       verifier: 'address',
-      verifierId: address,
+      verifierId: address
     };
     let pepperAccessToken = this.storage.getItem(PEPPER_ACCESS_TOKEN_KEY);
     // logger.debug("pepperAccessToken: ", pepperAccessToken);
@@ -390,7 +411,7 @@ export class PepperLogin {
 
     this.userInfo = {
       ...defaultUserWeb3Profile,
-      ...userInfo,
+      ...userInfo
     };
     logger.debug('Current user info: ', this.userInfo);
     logger.debug('Web3auth  user info: ', userInfo);
@@ -428,10 +449,11 @@ export class PepperLogin {
         email: this.userInfo.email,
         username: this.userInfo.name,
         web3_identifier: this.userInfo.verifierId || '',
-        login_token: this.loginToken || undefined,
+        login_token: this.loginToken || undefined
       };
       const initResponse = await this.pepperApi.postWeb3Init(userWeb3Login);
       let publicKey = this.userInfo.publicKey;
+      await this.subscriber?.onAuthChallengeSigning()
       if (initResponse && initResponse['nonce']) {
         this.currentStatus = LOGIN_STATUS.PEPPER_VERIFY;
 
@@ -450,7 +472,7 @@ export class PepperLogin {
           address: this.userInfo.publicAddress || '',
           // signature: signatureCompact || "",
           signature: signature || '',
-          message_prefix: PERSONAL_SIGN_PREFIX,
+          message_prefix: PERSONAL_SIGN_PREFIX
         };
         const verifyResponse = await this.pepperApi.postWeb3Verify(
           userWeb3Verify
@@ -463,6 +485,7 @@ export class PepperLogin {
       }
     } catch (e) {
       logger.error('Error while logging with pepper: ', e);
+      await this.subscriber?.onErrored(e)
       this.currentStatus = LOGIN_STATUS.READY;
     }
   }
