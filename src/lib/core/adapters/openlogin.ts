@@ -7,7 +7,7 @@ export const UX_MODE = {
   REDIRECT: 'redirect',
 } as const;
 export type UX_MODE_TYPE = typeof UX_MODE[keyof typeof UX_MODE];
-export const OpenLoginAdapter = async (
+export const openLoginAdapterBuilder = async (
   uxMode: UX_MODE_TYPE = 'popup',
   clientID = WEB3AUTH_CLIENT_ID
 ): Promise<OpenloginAdapter> => {

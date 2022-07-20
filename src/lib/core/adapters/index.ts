@@ -1,3 +1,4 @@
 export { MetaMaskAdapter } from './metamask';
+export { WalletConnectAdapter } from './walletconnect';
 
-export { OpenLoginAdapter, UX_MODE_TYPE } from './openlogin';
+export { openLoginAdapterBuilder, UX_MODE_TYPE } from './openlogin';
