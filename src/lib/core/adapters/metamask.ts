@@ -72,7 +72,7 @@ export class MetaMaskAdapter {
           window.ethereum as any
         );
         this._error = undefined;
-        logger.debug('Metamask _accounts: ', this._accounts);
+        logger.debug('Metamask accounts: ', this._accounts);
       } catch (e) {
         this._error = e;
         logger.error('Error while getting _accounts: ', e);

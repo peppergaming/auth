@@ -45,7 +45,7 @@ export class WalletConnectAdapter {
 
   public async connect(onConnect: (provider: Web3Provider) => Promise<void>) {
     this.connector?.on('disconnect', async () => {
-      console.warn('WalletConnect Disconnected');
+      logger.warn('WalletConnect Disconnected');
       this._connector = new WalletConnect(defaultSettings);
       QRCodeModal.close();
     });
