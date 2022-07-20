@@ -25,8 +25,14 @@ import { PepperApi } from '../pepperApi';
 import { generateNickname, isElectron, useStorage } from '../util';
 import { ExternalWallet, InternalWallet, PepperWallet } from '../wallet';
 
-import { EventSubscriber } from './EventSubscriber';
-import { getOpenLoginAdapter, MetaMaskAdapter, UX_MODE_TYPE } from './adapters';
+import { MetaMaskAdapter, OpenLoginAdapter, UX_MODE_TYPE } from './adapters';
+
+export interface EventSubscriber {
+  onConnecting: () => Promise<void>;
+  onConnected: (userInfo, pepperAccessToken) => Promise<void>;
+  onDisconnected: () => Promise<void>;
+  onErrored: (error) => Promise<void>;
+}
 
 export interface PepperLoginOptions {
   chainType?: typeof CHAIN_TYPE[keyof typeof CHAIN_TYPE];
@@ -109,7 +115,7 @@ export class PepperLogin {
 
     try {
       if (!this.openloginAdapter) {
-        this.openloginAdapter = await getOpenLoginAdapter(uxMode);
+        this.openloginAdapter = await OpenLoginAdapter(uxMode);
         this.web3Auth.configureAdapter(this.openloginAdapter);
       }
       if (this.web3Auth.status !== ADAPTER_STATUS.READY) {

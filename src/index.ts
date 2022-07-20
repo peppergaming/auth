@@ -1,5 +1,4 @@
 export * from './lib/core';
-export type { EventSubscriber } from './lib/core/EventSubscriber';
 export * from './lib/wallet';
 export {
   LOGIN_STATUS,
