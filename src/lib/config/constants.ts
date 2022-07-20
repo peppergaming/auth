@@ -1,4 +1,5 @@
 export const WEB3AUTH_CLIENT_ID =
+  process.env.NEXT_PUBLIC_PEPPER_WEB3AUTH_CLIENT_ID ||
   // cspell:disable-next-line
   'BDxiHUo7CjOaj58Y1Zea9cASZs66-WCb28O5c_D6X246JBkViSwbPaET48DFlBLBiPQ1mVxBRjWmTmFL4PseD2I';
 export const isDev = process?.env.NODE_ENV === 'development';
@@ -38,7 +39,7 @@ export const PEPPER_APP_OAUTH_PATH = 'oauth';
 
 export const PEPPER_ACCESS_TOKEN_KEY = 'PEPPER_ACCESS_TOKEN';
 export const PEPPER_CACHED_WALLET_KEY = 'PEPPER_CACHED_WALLET_KEY';
-
+export const OPENLOGIN_STORE_KEY = 'openlogin_store';
 export const PERSONAL_SIGN_PREFIX =
   'Please sign this message to verify your identity: ';
 
