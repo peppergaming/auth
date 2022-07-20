@@ -1,4 +1,4 @@
-import { Provider } from '@ethersproject/providers';
+import { Provider, Web3Provider } from '@ethersproject/providers';
 import { CONNECTED_EVENT_DATA, UserInfo } from '@web3auth/base';
 import { Web3AuthCore } from '@web3auth/core';
 import { OpenloginAdapter } from '@web3auth/openlogin-adapter';
@@ -14,7 +14,10 @@ import {
   LOGIN_STATUS_TYPE,
   PEPPER_ACCESS_TOKEN_KEY,
   PEPPER_CACHED_WALLET_KEY,
+  PEPPER_METAMASK,
+  PEPPER_WALLETCONNECT,
   PERSONAL_SIGN_PREFIX,
+  WALLET_CONNECT_KEY,
 } from '../config/constants';
 import logger, {
   DEFAULT_LEVEL,
@@ -22,10 +25,15 @@ import logger, {
   setLoggerLevel,
 } from '../config/logger';
 import { PepperApi } from '../pepperApi';
-import { generateNickname, isElectron, useStorage } from '../util';
+import { generateNickname, isElectron, useStorage } from '../utils';
 import { ExternalWallet, InternalWallet, PepperWallet } from '../wallet';
 
-import { MetaMaskAdapter, OpenLoginAdapter, UX_MODE_TYPE } from './adapters';
+import {
+  MetaMaskAdapter,
+  openLoginAdapterBuilder,
+  UX_MODE_TYPE,
+  WalletConnectAdapter,
+} from './adapters';
 
 export interface EventSubscriber {
   onConnecting: () => Promise<void>;
@@ -76,6 +84,7 @@ export class PepperLogin {
 
   private openloginAdapter: OpenloginAdapter | null;
   private metamaskAdapter?: MetaMaskAdapter;
+  private walletConnectAdapter?: WalletConnectAdapter;
   private storage = useStorage('local');
   private pepperApi: PepperApi;
   private subscriber?: EventSubscriber;
@@ -98,11 +107,13 @@ export class PepperLogin {
       accessToken: pepperAccessToken,
       isDevelopment: this.options.isDevelopment,
     });
-    this.metamaskAdapter = new MetaMaskAdapter();
+
     this.initialized = false;
     this.web3Auth = new Web3AuthCore({
       chainConfig: { chainNamespace: 'other' },
     });
+    this.externalWalletConnection = this.externalWalletConnection.bind(this);
+    this.onWalletConnectConnection = this.onWalletConnectConnection.bind(this);
     logger.info('Created pepper login instance');
   }
 
@@ -115,7 +126,7 @@ export class PepperLogin {
 
     try {
       if (!this.openloginAdapter) {
-        this.openloginAdapter = await OpenLoginAdapter(uxMode);
+        this.openloginAdapter = await openLoginAdapterBuilder(uxMode);
         this.web3Auth.configureAdapter(this.openloginAdapter);
       }
       if (this.web3Auth.status !== ADAPTER_STATUS.READY) {
@@ -124,10 +135,33 @@ export class PepperLogin {
       }
 
       this.loginToken = undefined;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let walletConnectSettings: any = this.storage.getItem(WALLET_CONNECT_KEY);
+
+      if (walletConnectSettings) {
+        walletConnectSettings = JSON.parse(walletConnectSettings);
+      } else {
+        walletConnectSettings = {
+          connected: false,
+          bridge: 'https://bridge.walletconnect.org',
+        };
+      }
+
+      this.walletConnectAdapter = new WalletConnectAdapter(
+        walletConnectSettings
+      );
+
+      this.metamaskAdapter = new MetaMaskAdapter();
+
       const cachedWallet = this.storage.getItem(PEPPER_CACHED_WALLET_KEY);
 
-      if (cachedWallet && cachedWallet === 'METAMASK') {
-        await this.connectWithMetaMask();
+      if (cachedWallet && cachedWallet === PEPPER_METAMASK) {
+        await this.connectToMetaMask();
+      } else if (cachedWallet && cachedWallet === PEPPER_WALLETCONNECT) {
+        if (walletConnectSettings.connected) {
+          await this.connectToWalletConnect();
+        }
       }
 
       this.initialized = true;
@@ -264,7 +298,37 @@ export class PepperLogin {
     return this.#signer;
   }
 
-  public async connectWithMetaMask() {
+  private async externalWalletConnection(name: string, provider: Web3Provider) {
+    this.currentStatus = LOGIN_STATUS.CONNECTED;
+    this.#provider = provider;
+    const signer = provider.getSigner();
+    const address = await signer.getAddress();
+    this.#signer = new ExternalWallet(signer);
+    this.#signer.address = address;
+    this.userInfo = {
+      ...defaultUserWeb3Profile,
+      publicAddress: address,
+      name: generateNickname(null, address.substring(2, 5)),
+      typeOfLogin: 'wallet',
+      verifier: 'address',
+      verifierId: address,
+    };
+    let pepperAccessToken = this.storage.getItem(PEPPER_ACCESS_TOKEN_KEY);
+    // logger.debug("pepperAccessToken: ", pepperAccessToken);
+
+    if (pepperAccessToken && !this.loginToken) {
+      await this.hydratePepper(pepperAccessToken);
+    } else {
+      await this.pepperLogin();
+    }
+
+    pepperAccessToken = this.storage.getItem(PEPPER_ACCESS_TOKEN_KEY);
+    if (pepperAccessToken) {
+      this.storage.setItem(PEPPER_CACHED_WALLET_KEY, name);
+    }
+  }
+
+  public async connectToMetaMask() {
     if (isElectron()) {
       // TODO implement oauth here
       console.debug('Support for electron not available yet');
@@ -274,34 +338,29 @@ export class PepperLogin {
     try {
       const provider = await this.metamaskAdapter?.connect();
       if (provider) {
-        this.currentStatus = LOGIN_STATUS.CONNECTED;
-        this.#provider = provider;
-        const signer = provider.getSigner();
-        const address = await signer.getAddress();
-        this.#signer = new ExternalWallet(signer);
-        this.#signer.address = address;
-        this.userInfo = {
-          ...defaultUserWeb3Profile,
-          publicAddress: address,
-          name: generateNickname(null, address.substring(2, 5)),
-          typeOfLogin: 'wallet',
-          verifier: 'address',
-          verifierId: address,
-        };
-        let pepperAccessToken = this.storage.getItem(PEPPER_ACCESS_TOKEN_KEY);
-        // logger.debug("pepperAccessToken: ", pepperAccessToken);
-
-        if (pepperAccessToken && !this.loginToken) {
-          await this.hydratePepper(pepperAccessToken);
-        } else {
-          await this.pepperLogin();
-        }
-
-        pepperAccessToken = this.storage.getItem(PEPPER_ACCESS_TOKEN_KEY);
-        if (pepperAccessToken) {
-          this.storage.setItem(PEPPER_CACHED_WALLET_KEY, 'METAMASK');
-        }
+        await this.externalWalletConnection(PEPPER_METAMASK, provider);
       }
+    } catch (e) {
+      logger.error(e);
+    }
+  }
+
+  private async onWalletConnectConnection(provider?: Web3Provider) {
+    logger.debug('Connecting external wallet with provider: ', provider);
+    if (provider) {
+      await this.externalWalletConnection(PEPPER_WALLETCONNECT, provider);
+    }
+  }
+
+  public async connectToWalletConnect() {
+    if (isElectron()) {
+      // TODO implement oauth here
+      console.debug('Support for electron not available yet');
+      return null;
+    }
+
+    try {
+      await this.walletConnectAdapter?.connect(this.onWalletConnectConnection);
     } catch (e) {
       logger.error(e);
     }
@@ -319,7 +378,6 @@ export class PepperLogin {
   }
 
   private async hydrateSession() {
-    console.debug('ENTERING hydrateSession');
     if (
       this.currentStatus === LOGIN_STATUS.HYDRATING ||
       !this.openloginAdapter
@@ -430,13 +488,17 @@ export class PepperLogin {
     } catch (e) {
       logger.error('Error while logging out: ', e);
     }
+
     this.#provider = null;
     this.#signer = null;
     this.storage.removeItem(PEPPER_ACCESS_TOKEN_KEY);
     this.storage.removeItem(PEPPER_CACHED_WALLET_KEY);
+    this.storage.removeItem(WALLET_CONNECT_KEY);
+
     this.web3Auth.clearCache();
     this.pepperApi.setAccessToken(null);
     this.userInfo = { ...defaultUserWeb3Profile };
+    await this.walletConnectAdapter?.disconnect();
     await this.init();
   }
 }
