@@ -83,7 +83,13 @@ const defaultUserWeb3Profile: UserWeb3Profile = {
   email: undefined,
   verifierId: '',
 };
-
+/**
+ * Example of usage
+ *
+ * ```ts
+ * const loginSDK = new PepperLogin();
+ * ```
+ */
 export class PepperLogin {
   readonly options: PepperLoginOptions;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
