@@ -11,6 +11,7 @@ import {
   ADAPTER_STATUS,
   AUTH_METHODS,
   CHAIN_TYPE,
+  LOGIN_PROVIDER,
   LOGIN_PROVIDER_TYPE,
   LOGIN_STATUS,
   LOGIN_STATUS_TYPE,
@@ -255,11 +256,19 @@ export class PepperLogin {
     loginProvider: LOGIN_PROVIDER_TYPE,
     loginHint?: string,
     loginToken?: string
-  ) {
+  ): Promise<Provider | null> {
     if (isElectron()) {
       // TODO implement oauth here
       console.debug('Support for electron not available yet');
       return null;
+    }
+
+    if (loginProvider === LOGIN_PROVIDER.METAMASK) {
+      return this.connectToMetaMask();
+    }
+
+    if (loginProvider === LOGIN_PROVIDER.WALLET_CONNECT) {
+      return this.connectToWalletConnect();
     }
 
     if (
@@ -281,7 +290,7 @@ export class PepperLogin {
 
     if (this.web3Auth.status === ADAPTER_STATUS.CONNECTED) {
       logger.warn('Already connected');
-      return this.#signer;
+      return this.#provider;
     }
 
     try {
@@ -312,7 +321,7 @@ export class PepperLogin {
 
     this.connectionIssued = false;
 
-    return this.#signer;
+    return this.#provider;
   }
 
   private async externalWalletConnection(name: string, provider: Web3Provider) {
@@ -343,6 +352,7 @@ export class PepperLogin {
     if (pepperAccessToken) {
       this.storage.setItem(PEPPER_CACHED_WALLET_KEY, name);
     }
+    return this.#provider;
   }
 
   public async connectToMetaMask() {
@@ -360,6 +370,7 @@ export class PepperLogin {
     } catch (e) {
       logger.error(e);
     }
+    return this.#provider;
   }
 
   private async onWalletConnectConnection(provider?: Web3Provider) {
@@ -381,6 +392,7 @@ export class PepperLogin {
     } catch (e) {
       logger.error(e);
     }
+    return this.#provider;
   }
 
   private async hydratePepper(accessToken: string) {
@@ -399,7 +411,7 @@ export class PepperLogin {
       this.currentStatus === LOGIN_STATUS.HYDRATING ||
       !this.openloginAdapter
     ) {
-      return this.#signer;
+      return this.#provider;
     }
     this.currentStatus = LOGIN_STATUS.HYDRATING;
 
@@ -427,7 +439,7 @@ export class PepperLogin {
     } else {
       await this.pepperLogin();
     }
-    return this.#signer;
+    return this.#provider;
   }
 
   private async pepperLogin() {
