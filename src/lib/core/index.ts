@@ -38,11 +38,60 @@ import {
   WalletConnectAdapter,
 } from './adapters';
 
+/**
+ * Example of usage
+ *
+ * ```ts
+ *    const eventSubscriber: EventSubscriber = {
+
+ *       async onConnecting() {
+ *          // put here your logic during connection
+ *          console.log('Connecting');
+ *       },
+ *       async onAuthChallengeSigning() {
+ *          // put here your logic during signing challenge
+ *          console.log('Signing Challenge');
+ *       },
+ *       async onConnected(userInfo: any, pepperAccessToken: string) {
+ *          // put here your logic for post connection
+ *          console.log('Connected');
+ *       },
+ *       async onDisconnected() {
+ *          // put here your logic for post disconnection
+ *          console.log('Disconnected');
+ *       },
+ *       async onErrored(error: any) {
+ *       // put here your logic for handling errors
+ *          console.log('Connection error');
+ *       },
+ *     };
+ * ```
+ */
+
 export interface EventSubscriber {
+  /**
+   * A function that is called when the sdk is connecting.
+   */
   onConnecting?: () => Promise<void>;
+
+  /**
+   * A function that is called when the sdk is performing the signing challenge.
+   */
   onAuthChallengeSigning?: () => Promise<void>;
+
+  /**
+   * A function that is called when the sdk is connected.
+   */
   onConnected?: (userInfo, pepperAccessToken) => Promise<void>;
+
+  /**
+   * A function that is called when the sdk is disconnected.
+   */
   onDisconnected?: () => Promise<void>;
+
+  /**
+   * A function that is called when the sdk has connection issues.
+   */
   onErrored?: (error) => Promise<void>;
 }
 
