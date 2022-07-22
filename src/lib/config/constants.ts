@@ -9,6 +9,8 @@ export declare const LOGIN_PROVIDER: {
   readonly DISCORD: 'discord';
   readonly TWITCH: 'twitch';
   readonly EMAIL_PASSWORDLESS: 'email_passwordless';
+  readonly METAMASK: 'metamask';
+  readonly WALLET_CONNECT: 'walletconnect';
 };
 
 export type LOGIN_PROVIDER_TYPE =
