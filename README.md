@@ -1,8 +1,14 @@
-# PepperGaming auth SDK
+# Peppergaming Auth SDK
 
-Easy auth for web3 gaming apps.
+Easy Auth for web3 gaming apps.
 
 [//]: # (TODO insert here a nice pic)
 
-## Documentation
-For a more detailed documentation of the code please see the specific documentation.
+Developing web3 apps is not easy, even more for games developers. Our Auth SDK allows easily to integrate a web3 Login module in your app.
+Passwordless, non-custodial Login. Integrate our SDK in your game in a few lines of code.
+
+
+
+## Code documentation
+For more details about the code please see the specific [documentation](https://peppergaming.github.io/auth/).
+
