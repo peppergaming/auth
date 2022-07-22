@@ -17,6 +17,72 @@
 <p>Easy Auth for web3 gaming apps.</p>
 <p>Developing web3 apps is not easy, even more for games developers. Our Auth SDK allows easily to integrate a web3 Login module in your app.
 Passwordless, non-custodial Login. Integrate our SDK in your game in a few lines of code.</p>
+<p>By using our SDK you can build a login infrastructure based on social logins or email and, for more advanced users, also external wallets.
+Currently, we support the following authentication methods:</p>
+
+<a href="#supported-authentication--methods" id="supported-authentication--methods" style="color: inherit; text-decoration: none;">
+  <h2>Supported authentication  methods</h2>
+</a>
+<table>
+<thead>
+<tr>
+<th align="center">Method</th>
+<th align="center">Type</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Google</td>
+<td align="center">Oauth</td>
+</tr>
+<tr>
+<td align="center">Discord</td>
+<td align="center">Oauth</td>
+</tr>
+<tr>
+<td align="center">Twitch</td>
+<td align="center">Oauth</td>
+</tr>
+<tr>
+<td align="center">Email</td>
+<td align="center">Passwordless flow</td>
+</tr>
+<tr>
+<td align="center">Metamask</td>
+<td align="center">External wallet</td>
+</tr>
+<tr>
+<td align="center">WalletConnect</td>
+<td align="center">External wallet</td>
+</tr>
+</tbody></table>
+
+<a href="#getting-started" id="getting-started" style="color: inherit; text-decoration: none;">
+  <h2>Getting started</h2>
+</a>
+
+<a href="#installation" id="installation" style="color: inherit; text-decoration: none;">
+  <h3>Installation</h3>
+</a>
+
+<a href="#npm" id="npm" style="color: inherit; text-decoration: none;">
+  <h4>npm</h4>
+</a>
+<pre><code class="language-shell"><span class="hl-0">npm i --save @peppergaming/auth</span>
+</code></pre>
+
+<a href="#yarn" id="yarn" style="color: inherit; text-decoration: none;">
+  <h4>yarn</h4>
+</a>
+<pre><code class="language-shell"><span class="hl-0">yarn add --save @peppergaming/auth</span>
+</code></pre>
+
+<a href="#usage" id="usage" style="color: inherit; text-decoration: none;">
+  <h3>Usage</h3>
+</a>
+<p>To quickly have access to the several login methods we support, just import the sdk and initialize it</p>
+<pre><code class="language-typescript"><span class="hl-1">import</span><span class="hl-0"> {</span><span class="hl-2">PepperLogin</span><span class="hl-0">} </span><span class="hl-1">from</span><span class="hl-0"> </span><span class="hl-3">&quot;@peppergaming/auth&quot;</span><br/><br/><span class="hl-4">// ... </span><br/><span class="hl-5">const</span><span class="hl-0"> </span><span class="hl-6">loginSDK</span><span class="hl-0"> = </span><span class="hl-5">new</span><span class="hl-0"> </span><span class="hl-7">PepperLogin</span><span class="hl-0">();</span><br/><br/><span class="hl-1">await</span><span class="hl-0"> </span><span class="hl-2">loginSDK</span><span class="hl-0">.</span><span class="hl-7">init</span><span class="hl-0">()</span><br/><br/><span class="hl-4">// This will trigger the login flow</span><br/><span class="hl-5">const</span><span class="hl-0"> </span><span class="hl-6">wallet</span><span class="hl-0"> = </span><span class="hl-1">await</span><span class="hl-0"> </span><span class="hl-2">loginSDK</span><span class="hl-0">.</span><span class="hl-7">connectTo</span><span class="hl-0">(</span><span class="hl-3">&quot;google&quot;</span><span class="hl-0">)</span>
+</code></pre>
+<p>That&#39;s it, now you  have a web3 wallet available in your app!</p>
 
 <a href="#code-documentation" id="code-documentation" style="color: inherit; text-decoration: none;">
   <h2>Code documentation</h2>
