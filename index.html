@@ -26,33 +26,33 @@ Currently, we support the following authentication methods:</p>
 <table>
 <thead>
 <tr>
-<th align="center">Method</th>
-<th align="center">Type</th>
+<th align="left">Method</th>
+<th align="left">Type</th>
 </tr>
 </thead>
 <tbody><tr>
-<td align="center">Google</td>
-<td align="center">Oauth</td>
+<td align="left">Google</td>
+<td align="left">Oauth</td>
 </tr>
 <tr>
-<td align="center">Discord</td>
-<td align="center">Oauth</td>
+<td align="left">Discord</td>
+<td align="left">Oauth</td>
 </tr>
 <tr>
-<td align="center">Twitch</td>
-<td align="center">Oauth</td>
+<td align="left">Twitch</td>
+<td align="left">Oauth</td>
 </tr>
 <tr>
-<td align="center">Email</td>
-<td align="center">Passwordless flow</td>
+<td align="left">Email</td>
+<td align="left">Passwordless flow</td>
 </tr>
 <tr>
-<td align="center">Metamask</td>
-<td align="center">External wallet</td>
+<td align="left">Metamask</td>
+<td align="left">External wallet</td>
 </tr>
 <tr>
-<td align="center">WalletConnect</td>
-<td align="center">External wallet</td>
+<td align="left">WalletConnect</td>
+<td align="left">External wallet</td>
 </tr>
 </tbody></table>
 
@@ -63,26 +63,27 @@ Currently, we support the following authentication methods:</p>
 <a href="#installation" id="installation" style="color: inherit; text-decoration: none;">
   <h3>Installation</h3>
 </a>
-
-<a href="#npm" id="npm" style="color: inherit; text-decoration: none;">
-  <h4>npm</h4>
-</a>
-<pre><code class="language-shell"><span class="hl-0">npm i --save @peppergaming/auth</span>
-</code></pre>
-
-<a href="#yarn" id="yarn" style="color: inherit; text-decoration: none;">
-  <h4>yarn</h4>
-</a>
-<pre><code class="language-shell"><span class="hl-0">yarn add --save @peppergaming/auth</span>
+<pre><code class="language-shell"><span class="hl-0">npm i --save @peppergaming/auth</span><br/><span class="hl-0">// or</span><br/><span class="hl-0">yarn add --save @peppergaming/auth</span>
 </code></pre>
 
 <a href="#usage" id="usage" style="color: inherit; text-decoration: none;">
   <h3>Usage</h3>
 </a>
 <p>To quickly have access to the several login methods we support, just import the sdk and initialize it</p>
-<pre><code class="language-typescript"><span class="hl-1">import</span><span class="hl-0"> {</span><span class="hl-2">PepperLogin</span><span class="hl-0">} </span><span class="hl-1">from</span><span class="hl-0"> </span><span class="hl-3">&quot;@peppergaming/auth&quot;</span><br/><br/><span class="hl-4">// ... </span><br/><span class="hl-5">const</span><span class="hl-0"> </span><span class="hl-6">loginSDK</span><span class="hl-0"> = </span><span class="hl-5">new</span><span class="hl-0"> </span><span class="hl-7">PepperLogin</span><span class="hl-0">();</span><br/><br/><span class="hl-1">await</span><span class="hl-0"> </span><span class="hl-2">loginSDK</span><span class="hl-0">.</span><span class="hl-7">init</span><span class="hl-0">()</span><br/><br/><span class="hl-4">// This will trigger the login flow</span><br/><span class="hl-5">const</span><span class="hl-0"> </span><span class="hl-6">wallet</span><span class="hl-0"> = </span><span class="hl-1">await</span><span class="hl-0"> </span><span class="hl-2">loginSDK</span><span class="hl-0">.</span><span class="hl-7">connectTo</span><span class="hl-0">(</span><span class="hl-3">&quot;google&quot;</span><span class="hl-0">)</span>
+<pre><code class="language-typescript"><span class="hl-1">import</span><span class="hl-0"> {</span><span class="hl-2">PepperLogin</span><span class="hl-0">} </span><span class="hl-1">from</span><span class="hl-0"> </span><span class="hl-3">&quot;@peppergaming/auth&quot;</span><br/><br/><span class="hl-4">// ... </span><br/><span class="hl-5">const</span><span class="hl-0"> </span><span class="hl-6">loginSDK</span><span class="hl-0"> = </span><span class="hl-5">new</span><span class="hl-0"> </span><span class="hl-7">PepperLogin</span><span class="hl-0">();</span><br/><span class="hl-1">await</span><span class="hl-0"> </span><span class="hl-2">loginSDK</span><span class="hl-0">.</span><span class="hl-7">init</span><span class="hl-0">()</span><br/><br/><span class="hl-4">// ...</span><br/><span class="hl-4">// You can login with some auth method</span><br/><span class="hl-5">const</span><span class="hl-0"> </span><span class="hl-6">web3Provider</span><span class="hl-0"> = </span><span class="hl-1">await</span><span class="hl-0"> </span><span class="hl-2">loginSDK</span><span class="hl-0">.</span><span class="hl-7">connectTo</span><span class="hl-0">(</span><span class="hl-3">&quot;google&quot;</span><span class="hl-0">)</span><br/><br/><span class="hl-4">//...</span><br/><span class="hl-4">// When you want to logout</span><br/><span class="hl-1">await</span><span class="hl-0"> </span><span class="hl-2">loginSDK</span><span class="hl-0">.</span><span class="hl-7">logout</span><span class="hl-0">()</span>
 </code></pre>
-<p>That&#39;s it, now you  have a web3 wallet available in your app!</p>
+<p>That&#39;s it, now you  have a web3 provider available in your app!</p>
+<p>For more documentation about what a web3 provider is, checkout the <a href="https://docs.ethers.io/v5/api/providers/provider/">ethers Provider documentation</a>.</p>
+
+<a href="#advanced-usage" id="advanced-usage" style="color: inherit; text-decoration: none;">
+  <h3>Advanced usage</h3>
+</a>
+<p>Your login infrastructure may need further control about what happens during the login lifecycle.
+The <a href="https://peppergaming.github.io/auth/classes/PepperLogin.html">PepperLogin</a> class can be instantiated with an <a href="https://peppergaming.github.io/auth/interfaces/PepperLoginOptions.html">options object</a>
+You can configure several SDK settings, one very useful option is the <a href="https://peppergaming.github.io/auth/interfaces/EventSubscriber.html">eventSubscriber</a>.
+Here&#39;s an example of SDK initialization with an eventSubscriber option.</p>
+<pre><code class="language-typescript"><span class="hl-1">import</span><span class="hl-0"> {</span><span class="hl-2">PepperLogin</span><span class="hl-0">} </span><span class="hl-1">from</span><span class="hl-0"> </span><span class="hl-3">&quot;@peppergaming/auth&quot;</span><br/><br/><br/><span class="hl-5">const</span><span class="hl-0"> </span><span class="hl-6">eventSubscriber</span><span class="hl-0">: </span><span class="hl-8">EventSubscriber</span><span class="hl-0"> = {</span><br/><span class="hl-0">  </span><span class="hl-5">async</span><span class="hl-0"> </span><span class="hl-7">onConnecting</span><span class="hl-0">() {</span><br/><span class="hl-0">     </span><span class="hl-4">// put here your logic during connection</span><br/><span class="hl-0">     </span><span class="hl-2">console</span><span class="hl-0">.</span><span class="hl-7">log</span><span class="hl-0">(</span><span class="hl-3">&quot;Connecting&quot;</span><span class="hl-0">);</span><br/><span class="hl-0">  },</span><br/><span class="hl-0">  </span><span class="hl-5">async</span><span class="hl-0"> </span><span class="hl-7">onAuthChallengeSigning</span><span class="hl-0">() {</span><br/><span class="hl-0">    </span><span class="hl-4">// put here your logic during signing challenge</span><br/><span class="hl-0">     </span><span class="hl-2">console</span><span class="hl-0">.</span><span class="hl-7">log</span><span class="hl-0">(</span><span class="hl-3">&quot;Signing Challenge&quot;</span><span class="hl-0">);</span><br/><span class="hl-0">  },</span><br/><span class="hl-0">  </span><span class="hl-5">async</span><span class="hl-0"> </span><span class="hl-7">onConnected</span><span class="hl-0">(</span><span class="hl-2">userInfo</span><span class="hl-0">: </span><span class="hl-8">any</span><span class="hl-0">, </span><span class="hl-2">pepperAccessToken</span><span class="hl-0">: </span><span class="hl-8">string</span><span class="hl-0">) {</span><br/><span class="hl-0">    </span><span class="hl-4">// put here your logic for post connection</span><br/><span class="hl-0">    </span><span class="hl-2">console</span><span class="hl-0">.</span><span class="hl-7">log</span><span class="hl-0">(</span><span class="hl-3">&quot;Connected with user info: &quot;</span><span class="hl-0">, </span><span class="hl-2">userInfo</span><span class="hl-0">);</span><br/><span class="hl-0">  },</span><br/><span class="hl-0">  </span><span class="hl-5">async</span><span class="hl-0"> </span><span class="hl-7">onDisconnected</span><span class="hl-0">() {</span><br/><span class="hl-0">   </span><span class="hl-4">// put here your logic for post disconnection</span><br/><span class="hl-0">     </span><span class="hl-2">console</span><span class="hl-0">.</span><span class="hl-7">log</span><span class="hl-0">(</span><span class="hl-3">&quot;Disconnected&quot;</span><span class="hl-0">);</span><br/><span class="hl-0">  },</span><br/><span class="hl-0">  </span><span class="hl-5">async</span><span class="hl-0"> </span><span class="hl-7">onErrored</span><span class="hl-0">(</span><span class="hl-2">error</span><span class="hl-0">: </span><span class="hl-8">any</span><span class="hl-0">) {</span><br/><span class="hl-0">  </span><span class="hl-4">// put here your logic for handling errors</span><br/><span class="hl-0">     </span><span class="hl-2">console</span><span class="hl-0">.</span><span class="hl-7">log</span><span class="hl-0">(</span><span class="hl-3">&quot;Connection error&quot;</span><span class="hl-0">);</span><br/><span class="hl-0">  },</span><br/><span class="hl-0">};</span><br/><br/><span class="hl-4">// ... </span><br/><span class="hl-5">const</span><span class="hl-0"> </span><span class="hl-6">loginSDK</span><span class="hl-0"> = </span><span class="hl-5">new</span><span class="hl-0"> </span><span class="hl-7">PepperLogin</span><span class="hl-0">({</span><span class="hl-2">eventSubscriber</span><span class="hl-0">});</span><br/><br/><span class="hl-1">await</span><span class="hl-0"> </span><span class="hl-2">loginSDK</span><span class="hl-0">.</span><span class="hl-7">init</span><span class="hl-0">()</span>
+</code></pre>
 
 <a href="#code-documentation" id="code-documentation" style="color: inherit; text-decoration: none;">
   <h2>Code documentation</h2>
@@ -118,9 +119,10 @@ Currently, we support the following authentication methods:</p>
 <li class="tsd-kind-class"><a href="classes/PepperWallet.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-128-path"></use><use href="#icon-128-text"></use></svg>Pepper<wbr/>Wallet</a></li>
 <li class="tsd-kind-interface"><a href="interfaces/EventSubscriber.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-interface)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6" id="icon-256-path"></rect><path d="M9.51 16V15.016H11.298V8.224H9.51V7.24H14.19V8.224H12.402V15.016H14.19V16H9.51Z" fill="var(--color-text)" id="icon-256-text"></path></svg>Event<wbr/>Subscriber</a></li>
 <li class="tsd-kind-interface"><a href="interfaces/PepperLoginOptions.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-256-path"></use><use href="#icon-256-text"></use></svg>Pepper<wbr/>Login<wbr/>Options</a></li>
-<li class="tsd-kind-interface"><a href="interfaces/UserWeb3Profile.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-256-path"></use><use href="#icon-256-text"></use></svg>User<wbr/>Web3<wbr/>Profile</a></li>
+<li class="tsd-kind-interface"><a href="interfaces/UserInfo.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-256-path"></use><use href="#icon-256-text"></use></svg>User<wbr/>Info</a></li>
 <li class="tsd-kind-variable"><a href="variables/ADAPTER_EVENTS.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-variable)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6" id="icon-32-path"></rect><path d="M11.106 16L8.85 7.24H9.966L11.454 13.192C11.558 13.608 11.646 13.996 11.718 14.356C11.79 14.708 11.842 14.976 11.874 15.16C11.906 14.976 11.954 14.708 12.018 14.356C12.09 13.996 12.178 13.608 12.282 13.192L13.758 7.24H14.85L12.582 16H11.106Z" fill="var(--color-text)" id="icon-32-text"></path></svg>ADAPTER_<wbr/>EVENTS</a></li>
 <li class="tsd-kind-variable"><a href="variables/ADAPTER_STATUS.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-32-path"></use><use href="#icon-32-text"></use></svg>ADAPTER_<wbr/>STATUS</a></li>
+<li class="tsd-kind-variable"><a href="variables/LOGIN_PROVIDER.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-32-path"></use><use href="#icon-32-text"></use></svg>LOGIN_<wbr/>PROVIDER</a></li>
 <li class="tsd-kind-variable"><a href="variables/LOGIN_STATUS.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-32-path"></use><use href="#icon-32-text"></use></svg>LOGIN_<wbr/>STATUS</a></li>
 <li class="tsd-kind-variable"><a href="variables/PEPPER_ACCESS_TOKEN_KEY.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-32-path"></use><use href="#icon-32-text"></use></svg>PEPPER_<wbr/>ACCESS_<wbr/>TOKEN_<wbr/>KEY</a></li></ul></nav></div></div>
 <div class="container tsd-generator">
