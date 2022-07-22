@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 
 import { Provider, Web3Provider } from '@ethersproject/providers';
-import { CONNECTED_EVENT_DATA, UserInfo } from '@web3auth/base';
+import { CUSTOM_LOGIN_PROVIDER_TYPE } from '@toruslabs/openlogin/src/constants';
+import { CONNECTED_EVENT_DATA } from '@web3auth/base';
 import { Web3AuthCore } from '@web3auth/core';
 import { OpenloginAdapter } from '@web3auth/openlogin-adapter';
 import { ethers } from 'ethers';
@@ -82,7 +83,10 @@ export interface EventSubscriber {
   /**
    * A function that is called when the sdk is connected.
    */
-  onConnected?: (userInfo, pepperAccessToken) => Promise<void>;
+  onConnected?: (
+    userInfo: UserInfo,
+    pepperAccessToken?: string
+  ) => Promise<void>;
 
   /**
    * A function that is called when the sdk is disconnected.
@@ -104,9 +108,18 @@ export interface PepperLoginOptions {
   eventSubscriber?: EventSubscriber;
 }
 
-export interface UserWeb3Profile extends Partial<UserInfo> {
+export interface UserInfo {
   publicAddress: string | null;
   publicKey: string | null;
+  email?: string;
+  name?: string;
+  profileImage?: string;
+  aggregateVerifier?: string;
+  verifier?: string;
+  verifierId?: string;
+  typeOfLogin?: LOGIN_PROVIDER_TYPE | CUSTOM_LOGIN_PROVIDER_TYPE;
+  dappShare?: string;
+  idToken?: string;
 }
 
 const defaultEventSubscriber: EventSubscriber = {
@@ -125,7 +138,7 @@ const defaultPepperLoginOptions: PepperLoginOptions = {
   isDevelopment: false,
 };
 
-const defaultUserWeb3Profile: UserWeb3Profile = {
+const defaultUserInfo: UserInfo = {
   publicAddress: null,
   publicKey: null,
   name: '',
@@ -133,11 +146,21 @@ const defaultUserWeb3Profile: UserWeb3Profile = {
   email: undefined,
   verifierId: '',
 };
+
 /**
  * Example of usage
  *
  * ```ts
+ *
+ * import {PepperLogin} from "@peppergaming/auth"
+ *
+ * // ...
  * const loginSDK = new PepperLogin();
+ *
+ * await loginSDK.init()
+ *
+ * // This will trigger the login flow
+ * const web3Provider = await loginSDK.connectTo("google")
  * ```
  */
 export class PepperLogin {
@@ -146,7 +169,7 @@ export class PepperLogin {
   private web3Auth: Web3AuthCore | any;
   private loginToken?: string;
 
-  private userInfo: UserWeb3Profile = defaultUserWeb3Profile;
+  private _userInfo: UserInfo = defaultUserInfo;
   private initialized = false;
 
   private openloginAdapter: OpenloginAdapter | null;
@@ -242,14 +265,14 @@ export class PepperLogin {
 
       logger.info('Initialized Pepper Login');
       // logger.debug('Current web3Auth: ', this.web3Auth);
-      // logger.debug('Current user info: ', this.userInfo);
+      // logger.debug('Current user info: ', this._userInfo);
     } catch (e) {
       logger.error('Error while initializing PepperLogin: ', e);
     }
   }
 
-  get getUserInfo(): Partial<UserWeb3Profile> | null {
-    return this.userInfo;
+  get userInfo(): Partial<UserInfo> | null {
+    return this._userInfo;
   }
 
   get isInitialized(): boolean {
@@ -386,8 +409,8 @@ export class PepperLogin {
     const address = await signer.getAddress();
     this.#signer = new ExternalWallet(signer);
     this.#signer.address = address;
-    this.userInfo = {
-      ...defaultUserWeb3Profile,
+    this._userInfo = {
+      ...defaultUserInfo,
       publicAddress: address,
       name: generateNickname(null, address.substring(2, 5)),
       typeOfLogin: 'wallet',
@@ -456,7 +479,7 @@ export class PepperLogin {
     this.currentStatus = LOGIN_STATUS.PEPPER_CONNECTED;
     this.loginToken = null;
     if (this.subscriber) {
-      await this.subscriber.onConnected(this.userInfo, accessToken);
+      await this.subscriber.onConnected(this._userInfo, accessToken);
     }
     logger.info('Logged with Pepper');
   }
@@ -472,18 +495,18 @@ export class PepperLogin {
 
     const userInfo = await this.web3Auth.getUserInfo();
 
-    this.userInfo = {
-      ...defaultUserWeb3Profile,
+    this._userInfo = {
+      ...defaultUserInfo,
       ...userInfo,
     };
-    // logger.debug('Current user info: ', this.userInfo);
-    // logger.debug('Web3auth  user info: ', userInfo);
+    // logger.debug('Current user info: ', this._userInfo);
+    // logger.debug('Web3auth  user info: ', _userInfo);
 
     this.#signer = new InternalWallet(this.openloginAdapter);
 
     this.#provider = this.#signer.provider || null;
-    this.userInfo.publicAddress = this.#signer.address;
-    this.userInfo.publicKey = this.#signer.publicKey;
+    this._userInfo.publicAddress = this.#signer.address;
+    this._userInfo.publicKey = this.#signer.publicKey;
     // logger.debug("Current wallet: ", this.#signer);
 
     const pepperAccessToken = this.storage.getItem(PEPPER_ACCESS_TOKEN_KEY);
@@ -507,15 +530,15 @@ export class PepperLogin {
     try {
       this.currentStatus = LOGIN_STATUS.PEPPER_INIT;
       const userWeb3Login = {
-        address: this.userInfo.publicAddress,
-        auth_method: AUTH_METHODS[this.userInfo.typeOfLogin] || '',
-        email: this.userInfo.email,
-        username: this.userInfo.name,
-        web3_identifier: this.userInfo.verifierId || '',
+        address: this._userInfo.publicAddress,
+        auth_method: AUTH_METHODS[this._userInfo.typeOfLogin] || '',
+        email: this._userInfo.email,
+        username: this._userInfo.name,
+        web3_identifier: this._userInfo.verifierId || '',
         login_token: this.loginToken || undefined,
       };
       const initResponse = await this.pepperApi.postWeb3Init(userWeb3Login);
-      let publicKey = this.userInfo.publicKey;
+      let publicKey = this._userInfo.publicKey;
       await this.subscriber?.onAuthChallengeSigning();
       if (initResponse && initResponse['nonce']) {
         this.currentStatus = LOGIN_STATUS.PEPPER_VERIFY;
@@ -531,8 +554,8 @@ export class PepperLogin {
         }
 
         const userWeb3Verify = {
-          public_key: this.userInfo.publicKey || '',
-          address: this.userInfo.publicAddress || '',
+          public_key: this._userInfo.publicKey || '',
+          address: this._userInfo.publicAddress || '',
           // signature: signatureCompact || "",
           signature: signature || '',
           message_prefix: PERSONAL_SIGN_PREFIX,
@@ -583,7 +606,7 @@ export class PepperLogin {
 
     this.web3Auth.clearCache();
     this.pepperApi.setAccessToken(null);
-    this.userInfo = { ...defaultUserWeb3Profile };
+    this._userInfo = { ...defaultUserInfo };
     await this.walletConnectAdapter?.disconnect();
     await this.init();
   }
