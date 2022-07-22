@@ -60,7 +60,7 @@ You can configure several SDK settings, one very useful option is the [eventSubs
 Here's an example of SDK initialization with an eventSubscriber option.
 
 ```typescript
-import {PepperLogin} from "@peppergaming/auth"
+import {PepperLogin, UserInfo} from "@peppergaming/auth"
 
 
 const eventSubscriber: EventSubscriber = {
@@ -72,7 +72,7 @@ const eventSubscriber: EventSubscriber = {
     // put here your logic during signing challenge
      console.log("Signing Challenge");
   },
-  async onConnected(userInfo: any, pepperAccessToken: string) {
+  async onConnected(userInfo: UserInfo, pepperAccessToken: string) {
     // put here your logic for post connection
     console.log("Connected with user info: ", userInfo);
   },
