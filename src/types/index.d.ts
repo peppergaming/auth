@@ -8,10 +8,10 @@ export declare interface EventSubscriber {
 }
 
 export declare interface LOGIN_PROVIDER {
-  readonly GOOGLE: 'google';
-  readonly DISCORD: 'discord';
-  readonly TWITCH: 'twitch';
-  readonly EMAIL_PASSWORDLESS: 'email_passwordless';
-  readonly METAMASK: 'metamask';
-  readonly WALLET_CONNECT: 'walletconnect';
+  GOOGLE: 'google';
+  DISCORD: 'discord';
+  TWITCH: 'twitch';
+  EMAIL_PASSWORDLESS: 'email_passwordless';
+  METAMASK: 'metamask';
+  WALLET_CONNECT: 'walletconnect';
 }

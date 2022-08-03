@@ -5,12 +5,12 @@ export const WEB3AUTH_CLIENT_ID =
 export const isDev = process?.env.NODE_ENV === 'development';
 
 export declare const LOGIN_PROVIDER: {
-  readonly GOOGLE: 'google';
-  readonly DISCORD: 'discord';
-  readonly TWITCH: 'twitch';
-  readonly EMAIL_PASSWORDLESS: 'email_passwordless';
-  readonly METAMASK: 'metamask';
-  readonly WALLET_CONNECT: 'walletconnect';
+  GOOGLE: 'google';
+  DISCORD: 'discord';
+  TWITCH: 'twitch';
+  EMAIL_PASSWORDLESS: 'email_passwordless';
+  METAMASK: 'metamask';
+  WALLET_CONNECT: 'walletconnect';
 };
 
 export type LOGIN_PROVIDER_TYPE =
