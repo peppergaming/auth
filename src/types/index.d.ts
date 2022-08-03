@@ -6,12 +6,3 @@ export declare interface EventSubscriber {
   onDisconnected: () => Promise<void>;
   onErrored: (error: any) => Promise<void>;
 }
-
-export declare interface LOGIN_PROVIDER {
-  GOOGLE: 'google';
-  DISCORD: 'discord';
-  TWITCH: 'twitch';
-  EMAIL_PASSWORDLESS: 'email_passwordless';
-  METAMASK: 'metamask';
-  WALLET_CONNECT: 'walletconnect';
-}

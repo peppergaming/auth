@@ -4,13 +4,13 @@ export const WEB3AUTH_CLIENT_ID =
   'BDxiHUo7CjOaj58Y1Zea9cASZs66-WCb28O5c_D6X246JBkViSwbPaET48DFlBLBiPQ1mVxBRjWmTmFL4PseD2I';
 export const isDev = process?.env.NODE_ENV === 'development';
 
-export declare const LOGIN_PROVIDER: {
-  GOOGLE: 'google';
-  DISCORD: 'discord';
-  TWITCH: 'twitch';
-  EMAIL_PASSWORDLESS: 'email_passwordless';
-  METAMASK: 'metamask';
-  WALLET_CONNECT: 'walletconnect';
+export const LOGIN_PROVIDER = {
+  GOOGLE: 'google',
+  DISCORD: 'discord',
+  TWITCH: 'twitch',
+  EMAIL_PASSWORDLESS: 'email_passwordless',
+  METAMASK: 'metamask',
+  WALLET_CONNECT: 'walletconnect',
 };
 
 export type LOGIN_PROVIDER_TYPE =
