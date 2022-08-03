@@ -1,5 +1,3 @@
-import logger from '../config/logger';
-
 import { getPepperAPIURL, UserWeb3Login, UserWeb3Verify } from './utils';
 
 export interface PepperApiOptions {
@@ -72,29 +70,19 @@ export class PepperApi {
   }
 
   public async postWeb3Init(userWeb3Login: UserWeb3Login) {
-    try {
-      return await this.post(
-        '/auth/web3/init',
-        {},
-        JSON.stringify(userWeb3Login)
-      );
-    } catch (e) {
-      // TODO throw this error if needed
-      logger.error(e);
-    }
+    return await this.post(
+      '/auth/web3/init',
+      {},
+      JSON.stringify(userWeb3Login)
+    );
   }
 
   public async postWeb3Verify(userWeb3verify: UserWeb3Verify) {
-    try {
-      // TODO parse this result and save access token
-      return await this.post(
-        '/auth/web3/verify',
-        {},
-        JSON.stringify(userWeb3verify)
-      );
-    } catch (e) {
-      // TODO throw this error if needed
-      logger.error(e);
-    }
+    // TODO parse this result and save access token
+    return await this.post(
+      '/auth/web3/verify',
+      {},
+      JSON.stringify(userWeb3verify)
+    );
   }
 }
