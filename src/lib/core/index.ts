@@ -109,15 +109,18 @@ export interface PepperLoginOptions {
 }
 
 export interface UserInfo {
-  publicAddress: string | null;
-  publicKey: string | null;
+  publicAddress?: string | null;
+  publicKey?: string | null;
   email?: string;
   name?: string;
   profileImage?: string;
+  typeOfLogin?: LOGIN_PROVIDER_TYPE | CUSTOM_LOGIN_PROVIDER_TYPE;
+}
+
+interface Web3Info {
   aggregateVerifier?: string;
   verifier?: string;
   verifierId?: string;
-  typeOfLogin?: LOGIN_PROVIDER_TYPE | CUSTOM_LOGIN_PROVIDER_TYPE;
   dappShare?: string;
   idToken?: string;
 }
@@ -141,10 +144,10 @@ const defaultPepperLoginOptions: PepperLoginOptions = {
 const defaultUserInfo: UserInfo = {
   publicAddress: null,
   publicKey: null,
-  name: '',
-  typeOfLogin: '',
   email: undefined,
-  verifierId: '',
+  name: '',
+  profileImage: undefined,
+  typeOfLogin: '',
 };
 
 /**
@@ -170,6 +173,7 @@ export class PepperLogin {
   private loginToken?: string;
 
   private _userInfo: UserInfo = defaultUserInfo;
+  private _web3Info: Web3Info = {};
   private initialized = false;
 
   private openloginAdapter: OpenloginAdapter | null;
@@ -418,11 +422,12 @@ export class PepperLogin {
       publicAddress: address,
       name: generateNickname(null, address.substring(2, 5)),
       typeOfLogin: 'wallet',
-      verifier: 'address',
+    };
+    this._web3Info = {
+      verifier: address,
       verifierId: address,
     };
     let pepperAccessToken = this.storage.getItem(PEPPER_ACCESS_TOKEN_KEY);
-    // logger.debug("pepperAccessToken: ", pepperAccessToken);
 
     if (pepperAccessToken && !this.loginToken) {
       await this.hydratePepper(pepperAccessToken);
@@ -501,8 +506,20 @@ export class PepperLogin {
 
     this._userInfo = {
       ...defaultUserInfo,
-      ...userInfo,
+      email: userInfo.email,
+      name: userInfo.name,
+      profileImage: userInfo.profileImage,
+      typeOfLogin: userInfo.typeOfLogin,
     };
+
+    this._web3Info = {
+      aggregateVerifier: userInfo.aggregateVerifier,
+      verifier: userInfo.verifier,
+      verifierId: userInfo.verifierId,
+      dappShare: userInfo.dappShare,
+      idToken: userInfo.idToken,
+    };
+
     // logger.debug('Current user info: ', this._userInfo);
     // logger.debug('Web3auth  user info: ', _userInfo);
 
@@ -538,7 +555,7 @@ export class PepperLogin {
         auth_method: AUTH_METHODS[this._userInfo.typeOfLogin] || '',
         email: this._userInfo.email,
         username: this._userInfo.name,
-        web3_identifier: this._userInfo.verifierId || '',
+        web3_identifier: this._web3Info.verifierId || '',
         login_token: this.loginToken || undefined,
       };
       const initResponse = await this.pepperApi.postWeb3Init(userWeb3Login);
@@ -611,6 +628,7 @@ export class PepperLogin {
     this.web3Auth.clearCache();
     this.pepperApi.setAccessToken(null);
     this._userInfo = { ...defaultUserInfo };
+    this._web3Info = {};
     await this.walletConnectAdapter?.disconnect();
     await this.init();
   }
