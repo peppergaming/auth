@@ -58,7 +58,7 @@ export { ChainConfig };
  *          // put here your logic during signing challenge
  *          console.log('Signing Challenge');
  *       },
- *       async onConnected(userInfo: any, pepperAccessToken: string) {
+ *       async onConnected(userInfo: UserInfo, provider: Provider, signer: PepperWallet) {
  *          // put here your logic for post connection
  *          console.log('Connected');
  *       },
@@ -90,6 +90,8 @@ export interface EventSubscriber {
    */
   onConnected?: (
     userInfo: UserInfo,
+    provider: Provider,
+    signer: PepperWallet,
     pepperAccessToken?: string
   ) => Promise<void>;
 
@@ -518,7 +520,12 @@ export class PepperLogin {
     this.currentStatus = LOGIN_STATUS.PEPPER_CONNECTED;
     this.loginToken = null;
     if (this.subscriber) {
-      await this.subscriber.onConnected(this._userInfo, accessToken);
+      await this.subscriber.onConnected(
+        this._userInfo,
+        this.#provider,
+        this.#signer,
+        accessToken
+      );
     }
     logger.info('Logged with Pepper');
   }
