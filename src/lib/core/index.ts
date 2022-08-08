@@ -7,6 +7,7 @@ import { Web3AuthCore } from '@web3auth/core';
 import { OpenloginAdapter } from '@web3auth/openlogin-adapter';
 import { ethers } from 'ethers';
 
+import { ChainConfig } from '../../types';
 import {
   ADAPTER_EVENTS,
   ADAPTER_STATUS,
@@ -38,6 +39,8 @@ import {
   UX_MODE_TYPE,
   WalletConnectAdapter,
 } from './adapters';
+
+export { ChainConfig };
 
 /**
  * Example of usage
@@ -99,13 +102,6 @@ export interface EventSubscriber {
   onErrored?: (error) => Promise<void>;
 }
 
-// TODO document this
-export interface ChainConfig {
-  chainType?: typeof CHAIN_TYPE[keyof typeof CHAIN_TYPE];
-  chainId?: string;
-  rpcTarget?: string;
-}
-
 //  TODO document this
 export interface PepperLoginOptions {
   chainConfig?: ChainConfig;
@@ -141,7 +137,11 @@ const defaultEventSubscriber: EventSubscriber = {
   onErrored: async () => {},
 };
 
-const defaultChainConfig = { chainType: CHAIN_TYPE.EVM, chainId: '1' };
+const defaultChainConfig = {
+  chainType: CHAIN_TYPE.EVM,
+  chainId: '1',
+  name: 'default',
+};
 
 const defaultPepperLoginOptions: PepperLoginOptions = {
   chainConfig: defaultChainConfig,
@@ -536,6 +536,7 @@ export class PepperLogin {
     this.#signer = new InternalWallet(this.openloginAdapter);
 
     this.#provider = this.#signer.provider || null;
+
     this._userInfo.publicAddress = this.#signer.address;
     this._userInfo.publicKey = this.#signer.publicKey;
     // logger.debug("Current wallet: ", this.#signer);
