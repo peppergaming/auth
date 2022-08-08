@@ -6,7 +6,7 @@ import { CONNECTED_EVENT_DATA } from '@web3auth/base';
 import { Web3AuthCore } from '@web3auth/core';
 import { OpenloginAdapter } from '@web3auth/openlogin-adapter';
 import { ethers } from 'ethers';
-
+import { JsonRpcProvider } from '@ethersproject/providers';
 import { ChainConfig } from '../../types';
 import {
   ADAPTER_EVENTS,
@@ -519,6 +519,14 @@ export class PepperLogin {
     this.pepperApi.setAccessToken(accessToken);
     this.currentStatus = LOGIN_STATUS.PEPPER_CONNECTED;
     this.loginToken = null;
+    if (!this.#provider) {
+      const chainConfig = this.options.chainConfig;
+      this.#provider = new JsonRpcProvider(chainConfig.rpcTarget || '', {
+        chainId: parseInt(chainConfig.chainId || '1'),
+        name: chainConfig.name || 'default',
+      });
+    }
+
     if (this.subscriber) {
       await this.subscriber.onConnected(
         this._userInfo,
@@ -563,6 +571,13 @@ export class PepperLogin {
     this.#signer = new InternalWallet(this.openloginAdapter);
 
     this.#provider = this.#signer.provider || null;
+    if (!this.#provider) {
+      const chainConfig = this.options.chainConfig;
+      this.#provider = new JsonRpcProvider(chainConfig.rpcTarget || '', {
+        chainId: parseInt(chainConfig.chainId || '1'),
+        name: chainConfig.name || 'default',
+      });
+    }
 
     this._userInfo.publicAddress = this.#signer.address;
     this._userInfo.publicKey = this.#signer.publicKey;
