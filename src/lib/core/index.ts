@@ -279,6 +279,10 @@ export class PepperLogin {
     return this.initialized;
   }
 
+  get signer(): PepperWallet {
+    return this.#signer;
+  }
+
   get provider(): Provider {
     return this.#provider;
   }
