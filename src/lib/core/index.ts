@@ -99,8 +99,16 @@ export interface EventSubscriber {
   onErrored?: (error) => Promise<void>;
 }
 
-export interface PepperLoginOptions {
+// TODO document this
+export interface ChainConfig {
   chainType?: typeof CHAIN_TYPE[keyof typeof CHAIN_TYPE];
+  chainId?: string;
+  rpcTarget?: string;
+}
+
+//  TODO document this
+export interface PepperLoginOptions {
+  chainConfig?: ChainConfig;
   clientId?: string;
   logLevel?: LogLevel;
   isMobile?: boolean;
@@ -133,8 +141,10 @@ const defaultEventSubscriber: EventSubscriber = {
   onErrored: async () => {},
 };
 
+const defaultChainConfig = { chainType: CHAIN_TYPE.EVM, chainId: '1' };
+
 const defaultPepperLoginOptions: PepperLoginOptions = {
-  chainType: CHAIN_TYPE.EVM,
+  chainConfig: defaultChainConfig,
   clientId: undefined,
   logLevel: DEFAULT_LEVEL,
   isMobile: false,
