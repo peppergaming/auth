@@ -191,7 +191,7 @@ export class PepperLogin {
   private walletConnectAdapter?: WalletConnectAdapter;
   private storage = useStorage('local');
   private pepperApi: PepperApi;
-  private subscriber?: EventSubscriber;
+  private subscriber?: EventSubscriber = defaultEventSubscriber;
   private currentStatus: LOGIN_STATUS_TYPE = LOGIN_STATUS.NOT_READY;
   private connectionIssued = false;
 
@@ -205,10 +205,18 @@ export class PepperLogin {
     }
     setLoggerLevel(this.options.logLevel || DEFAULT_LEVEL);
 
-    if (this.options.eventSubscriber) {
-      this.subscriber = {
+    if (options && options.eventSubscriber) {
+      this.options.eventSubscriber = {
         ...defaultEventSubscriber,
-        ...this.options.eventSubscriber,
+        ...options.eventSubscriber,
+      };
+    }
+    this.subscriber = this.options.eventSubscriber || defaultEventSubscriber;
+
+    if (options && options.chainConfig) {
+      this.options.chainConfig = {
+        ...defaultChainConfig,
+        ...options.chainConfig,
       };
     }
 
@@ -460,7 +468,9 @@ export class PepperLogin {
     }
 
     try {
-      const provider = await this.metamaskAdapter?.connect();
+      const provider = await this.metamaskAdapter?.connect(
+        this.options.chainConfig
+      );
       if (provider) {
         await this.externalWalletConnection(PEPPER_METAMASK, provider);
       }
