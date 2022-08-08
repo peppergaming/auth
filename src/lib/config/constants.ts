@@ -53,7 +53,15 @@ export const CHAIN_TYPE = {
   EVM: 'evm',
   // TODO
   // SOLANA: "solana",
-} as const;
+  // OTHER: "other",
+};
+
+export const CHAIN_NAMESPACES = {
+  EIP155: 'eip155',
+  // TODO
+  // SOLANA: "solana",
+  // OTHER: "other",
+};
 
 export const AUTH_METHODS = {
   google: 'GOOGLE_AUTH',

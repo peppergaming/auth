@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any*/
 
-import { CHAIN_TYPE } from '../lib/config/constants';
+import { CHAIN_NAMESPACES, CHAIN_TYPE } from '../lib/config/constants';
 
 export declare interface EventSubscriber {
   onConnecting: () => Promise<void>;
@@ -11,6 +11,7 @@ export declare interface EventSubscriber {
 
 // TODO document this
 export interface ChainConfig {
+  chainNamespace?: typeof CHAIN_NAMESPACES[keyof typeof CHAIN_NAMESPACES];
   chainType?: typeof CHAIN_TYPE[keyof typeof CHAIN_TYPE];
   chainId?: string;
   name?: string;

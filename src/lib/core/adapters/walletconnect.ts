@@ -1,4 +1,4 @@
-/* eslint-disable no-empty */
+/* eslint-disable no-empty,  @typescript-eslint/no-explicit-any */
 
 import { Web3Provider } from '@ethersproject/providers';
 import WalletConnect from '@walletconnect/client';
@@ -12,8 +12,6 @@ import logger from '../../config/logger';
 
 const defaultSettings = {
   bridge: 'https://l.bridge.walletconnect.org', // Required
-  // bridge: "https://bridge.walletconnect.org", // Required
-  // qrcodeModal: QRCodeModal,
 };
 
 export class WalletConnectAdapter {

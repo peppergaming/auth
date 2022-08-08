@@ -12,6 +12,7 @@ import {
   ADAPTER_EVENTS,
   ADAPTER_STATUS,
   AUTH_METHODS,
+  CHAIN_NAMESPACES,
   CHAIN_TYPE,
   LOGIN_PROVIDER,
   LOGIN_PROVIDER_TYPE,
@@ -23,6 +24,7 @@ import {
   PEPPER_WALLETCONNECT,
   PERSONAL_SIGN_PREFIX,
   WALLET_CONNECT_KEY,
+  WEB3AUTH_CLIENT_ID,
 } from '../config/constants';
 import logger, {
   DEFAULT_LEVEL,
@@ -138,6 +140,7 @@ const defaultEventSubscriber: EventSubscriber = {
 };
 
 const defaultChainConfig = {
+  chainNamespace: CHAIN_NAMESPACES.EIP155,
   chainType: CHAIN_TYPE.EVM,
   chainId: '1',
   name: 'default',
@@ -244,7 +247,11 @@ export class PepperLogin {
 
     try {
       if (!this.openloginAdapter) {
-        this.openloginAdapter = await openLoginAdapterBuilder(uxMode);
+        this.openloginAdapter = await openLoginAdapterBuilder(
+          uxMode,
+          WEB3AUTH_CLIENT_ID,
+          this.options.chainConfig
+        );
         this.web3Auth.configureAdapter(this.openloginAdapter);
       }
       if (this.web3Auth.status !== ADAPTER_STATUS.READY) {

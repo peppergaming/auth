@@ -5,8 +5,8 @@ import MetaMaskOnboarding from '@metamask/onboarding';
 import { MetaMaskInpageProvider } from '@metamask/providers';
 import { ethers } from 'ethers';
 
-import logger from '../../config/logger';
 import { ChainConfig } from '../../../types';
+import logger from '../../config/logger';
 
 declare global {
   interface Window {
@@ -74,8 +74,8 @@ export class MetaMaskAdapter {
         this._provider = new ethers.providers.Web3Provider(
           window.ethereum as any,
           {
-            chainId: parseInt(chainConfig.chainId || '1'),
-            name: chainConfig.name,
+            chainId: parseInt(chainConfig?.chainId || '1'),
+            name: chainConfig?.name || 'default',
           }
         );
 
