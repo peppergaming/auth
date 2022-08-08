@@ -485,7 +485,10 @@ export class PepperLogin {
     }
 
     try {
-      await this.walletConnectAdapter?.connect(this.onWalletConnectConnection);
+      await this.walletConnectAdapter?.connect(
+        this.onWalletConnectConnection,
+        this.options.chainConfig
+      );
     } catch (e) {
       logger.error(e);
     }
