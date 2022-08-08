@@ -568,16 +568,12 @@ export class PepperLogin {
     // logger.debug('Current user info: ', this._userInfo);
     // logger.debug('Web3auth  user info: ', _userInfo);
 
-    this.#signer = new InternalWallet(this.openloginAdapter);
+    this.#signer = new InternalWallet(
+      this.openloginAdapter,
+      this.options.chainConfig
+    );
 
     this.#provider = this.#signer.provider || null;
-    if (!this.#provider) {
-      const chainConfig = this.options.chainConfig;
-      this.#provider = new JsonRpcProvider(chainConfig.rpcTarget || '', {
-        chainId: parseInt(chainConfig.chainId || '1'),
-        name: chainConfig.name || 'default',
-      });
-    }
 
     this._userInfo.publicAddress = this.#signer.address;
     this._userInfo.publicKey = this.#signer.publicKey;

@@ -1,10 +1,11 @@
 import { TransactionRequest } from '@ethersproject/abstract-provider';
 import { Bytes } from '@ethersproject/bytes';
-import { JsonRpcSigner } from '@ethersproject/providers';
+import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
 import { OpenloginAdapter } from '@web3auth/openlogin-adapter';
 import { Signer, Wallet } from 'ethers';
 
 import logger from '../config/logger';
+import { ChainConfig } from '../../types';
 
 export abstract class PepperWallet {
   readonly #wallet: Signer;
@@ -47,7 +48,7 @@ export abstract class PepperWallet {
 }
 
 export class InternalWallet extends PepperWallet {
-  constructor(adapter: OpenloginAdapter) {
+  constructor(adapter: OpenloginAdapter, chainConfig: ChainConfig) {
     if (
       !adapter ||
       !adapter.openloginInstance ||
@@ -56,7 +57,15 @@ export class InternalWallet extends PepperWallet {
       logger.debug('Pepper wallet received an invalid adapter: ', adapter);
       throw new Error('Unable to instantiate Pepper Wallet');
     }
-    const wallet = new Wallet(`0x${adapter.openloginInstance.privKey}`);
+
+    const provider = new JsonRpcProvider(chainConfig.rpcTarget || '', {
+      chainId: parseInt(chainConfig.chainId || '1'),
+      name: chainConfig.name || 'default',
+    });
+    const wallet = new Wallet(
+      `0x${adapter.openloginInstance.privKey}`,
+      provider
+    );
     super(wallet, wallet.address, wallet.publicKey);
   }
 }
