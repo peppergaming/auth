@@ -15,6 +15,7 @@ import {
   AUTH_METHODS,
   CHAIN_NAMESPACES,
   CHAIN_TYPE,
+  IS_DEV,
   LOGIN_PROVIDER,
   LOGIN_PROVIDER_TYPE,
   LOGIN_STATUS,
@@ -26,6 +27,7 @@ import {
   PERSONAL_SIGN_PREFIX,
   WALLET_CONNECT_KEY,
   WEB3AUTH_CLIENT_ID,
+  WEB3AUTH_CLIENT_ID_DEV,
 } from '../config/constants';
 import logger, {
   DEFAULT_LEVEL,
@@ -247,12 +249,15 @@ export class PepperLogin {
       return;
     }
     const uxMode: UX_MODE_TYPE = this.options.isMobile ? 'redirect' : 'popup';
+    const web3authClientId = IS_DEV
+      ? WEB3AUTH_CLIENT_ID_DEV
+      : WEB3AUTH_CLIENT_ID;
 
     try {
       if (!this.openloginAdapter) {
         this.openloginAdapter = await openLoginAdapterBuilder(
           uxMode,
-          WEB3AUTH_CLIENT_ID,
+          web3authClientId,
           this.options.chainConfig
         );
         this.web3Auth.configureAdapter(this.openloginAdapter);
