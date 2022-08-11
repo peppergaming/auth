@@ -5,6 +5,7 @@ import MetaMaskOnboarding from '@metamask/onboarding';
 import { MetaMaskInpageProvider } from '@metamask/providers';
 import { ethers } from 'ethers';
 
+import { ChainConfig } from '../../../types';
 import logger from '../../config/logger';
 
 declare global {
@@ -44,7 +45,9 @@ export class MetaMaskAdapter {
     }
   }
 
-  public async connect(): Promise<Web3Provider | undefined> {
+  public async connect(
+    chainConfig?: ChainConfig
+  ): Promise<Web3Provider | undefined> {
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {
       if (this.pendingRequest) {
         logger.warn('Request already pending.');
@@ -69,8 +72,13 @@ export class MetaMaskAdapter {
         }
 
         this._provider = new ethers.providers.Web3Provider(
-          window.ethereum as any
+          window.ethereum as any,
+          {
+            chainId: parseInt(chainConfig?.chainId || '1'),
+            name: chainConfig?.name || 'default',
+          }
         );
+
         this._error = undefined;
         logger.debug('Metamask accounts: ', this._accounts);
       } catch (e) {
