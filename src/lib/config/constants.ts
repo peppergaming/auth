@@ -6,7 +6,7 @@ export const WEB3AUTH_CLIENT_ID =
   process.env.NEXT_PUBLIC_PEPPER_WEB3AUTH_CLIENT_ID ||
   // cspell:disable-next-line
   'BEnDajrw8JgtiTSFPxzHMJrFRnmQuP2wtUYXvksI9h9jQAbSVNUo2JmQIs0aTOsrSu7jLaJu5i4io2UCQS-T_uM';
-export const IS_DEV =  process?.env.NODE_ENV === 'development';
+export const IS_DEV = process?.env.NODE_ENV === 'development';
 
 export const LOGIN_PROVIDER = {
   GOOGLE: 'google',
