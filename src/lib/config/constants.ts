@@ -1,8 +1,15 @@
+export const WEB3AUTH_CLIENT_ID_DEV =
+  // cspell:disable-next-line
+  'BDxiHUo7CjOaj58Y1Zea9cASZs66-WCb28O5c_D6X246JBkViSwbPaET48DFlBLBiPQ1mVxBRjWmTmFL4PseD2I';
+
 export const WEB3AUTH_CLIENT_ID =
   process.env.NEXT_PUBLIC_PEPPER_WEB3AUTH_CLIENT_ID ||
   // cspell:disable-next-line
-  'BDxiHUo7CjOaj58Y1Zea9cASZs66-WCb28O5c_D6X246JBkViSwbPaET48DFlBLBiPQ1mVxBRjWmTmFL4PseD2I';
-export const isDev = process?.env.NODE_ENV === 'development';
+  'BEnDajrw8JgtiTSFPxzHMJrFRnmQuP2wtUYXvksI9h9jQAbSVNUo2JmQIs0aTOsrSu7jLaJu5i4io2UCQS-T_uM';
+export const isDev =
+  location.hostname === 'localhost' ||
+  location.hostname === '127.0.0.1' ||
+  process?.env.NODE_ENV === 'development';
 
 export const LOGIN_PROVIDER = {
   GOOGLE: 'google',
