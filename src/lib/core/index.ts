@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 
 import { Provider, Web3Provider } from '@ethersproject/providers';
+import { JsonRpcProvider } from '@ethersproject/providers';
 import { CUSTOM_LOGIN_PROVIDER_TYPE } from '@toruslabs/openlogin/src/constants';
 import { CONNECTED_EVENT_DATA } from '@web3auth/base';
 import { Web3AuthCore } from '@web3auth/core';
 import { OpenloginAdapter } from '@web3auth/openlogin-adapter';
 import { ethers } from 'ethers';
-import { JsonRpcProvider } from '@ethersproject/providers';
+
 import { ChainConfig } from '../../types';
 import {
   ADAPTER_EVENTS,

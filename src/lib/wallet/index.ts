@@ -4,8 +4,8 @@ import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
 import { OpenloginAdapter } from '@web3auth/openlogin-adapter';
 import { Signer, Wallet } from 'ethers';
 
-import logger from '../config/logger';
 import { ChainConfig } from '../../types';
+import logger from '../config/logger';
 
 export abstract class PepperWallet {
   readonly #wallet: Signer;

@@ -1,5 +1,6 @@
 import { OpenloginAdapter } from '@web3auth/openlogin-adapter';
 
+import { ChainConfig } from '../../../types';
 import {
   CHAIN_NAMESPACES,
   isDev,
