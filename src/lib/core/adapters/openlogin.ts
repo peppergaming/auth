@@ -3,14 +3,14 @@ import { OpenloginAdapter } from '@web3auth/openlogin-adapter';
 import { ChainConfig } from '../../../types';
 import {
   CHAIN_NAMESPACES,
-  isDev,
+  IS_DEV,
   PEPPER_INFURA_ID,
   WEB3AUTH_CLIENT_ID,
   WEB3AUTH_CLIENT_ID_DEV,
 } from '../../config/constants';
 import logger from '../../config/logger';
 
-const web3authClientId = isDev ? WEB3AUTH_CLIENT_ID_DEV : WEB3AUTH_CLIENT_ID;
+const web3authClientId = IS_DEV ? WEB3AUTH_CLIENT_ID_DEV : WEB3AUTH_CLIENT_ID;
 
 export const UX_MODE = {
   POPUP: 'popup',
@@ -22,8 +22,8 @@ export const openLoginAdapterBuilder = async (
   clientID = web3authClientId,
   chainConfig?: ChainConfig
 ): Promise<OpenloginAdapter> => {
-  const network = isDev ? 'testnet' : 'mainnet';
-  const infuraNetwork = isDev ? 'rinkeby' : 'mainnet';
+  const network = IS_DEV ? 'testnet' : 'mainnet';
+  const infuraNetwork = IS_DEV ? 'rinkeby' : 'mainnet';
 
   const currentChainConfig = {
     chainId: chainConfig?.chainId || '1',
