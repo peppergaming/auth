@@ -1,4 +1,4 @@
-# Peppergaming Auth SDK
+# Pepper Auth SDK
 
 Easy Auth for web3 gaming apps.
 
