@@ -8,9 +8,13 @@ Developing web3 apps is not easy, even more for games developers. Our Auth SDK a
 Passwordless, non-custodial Login. Integrate our SDK in your game in a few lines of code.
 
 By using our SDK you can build a login infrastructure based on social logins or email and, for more advanced users, also external wallets.
-Currently, we support the following authentication methods:
+
+## Demo Project
+If you want to see the SDK in action, checkout our [demo project](https://github.com/peppergaming/pepper-star-battle).
 
 ## Supported authentication  methods
+
+Currently, we support the following authentication methods:
 
 | Method        | Type              |
 |:--------------|:------------------|
