@@ -1,0 +1,124 @@
+import useStorage from './hostStorage';
+import { getId, Storage } from './utils';
+
+const connectId = 'sessionAccessId-connected';
+
+const storage = useStorage();
+
+const hostStorage = {
+  get(key: string) {
+    return storage.getItem(key);
+  },
+  set(key: string, value: string) {
+    return storage.setItem(key, value);
+  },
+  remove(key: string) {
+    return storage.removeItem(key);
+  },
+};
+
+const guestStorage = {
+  get(event, data) {
+    event.source.postMessage(
+      {
+        id: data.id,
+        data: storage.getItem(data.key),
+      },
+      event.origin
+    );
+  },
+  set(event, data) {
+    storage.setItem(data.key, data.value);
+
+    event.source.postMessage(
+      {
+        id: data.id,
+      },
+      event.origin
+    );
+  },
+  remove(event, data) {
+    storage.removeItem(data.key);
+
+    event.source.postMessage(
+      {
+        id: data.id,
+      },
+      event.origin
+    );
+  },
+  connect(event) {
+    event.source.postMessage(
+      {
+        id: connectId,
+      },
+      event.origin
+    );
+  },
+};
+
+type Method = 'get' | 'set' | 'remove';
+
+export interface AllowedDomain {
+  origin: string;
+  allowedMethods?: Method[];
+}
+
+export const createHost = (allowedDomains: AllowedDomain[]): Storage => {
+  let connected = false;
+  const handleMessage = (event) => {
+    const { data } = event;
+    const domain = allowedDomains.find(
+      (allowedDomain) => event.origin === allowedDomain.origin
+    );
+    const id = getId(data);
+
+    if (!id) {
+      return;
+    }
+
+    if (!domain) {
+      event.source.postMessage(
+        {
+          id,
+          connectError: true,
+          error: `${event.origin} is not an allowed domain`,
+        },
+        event.origin
+      );
+
+      return;
+    }
+
+    const { method } = data;
+
+    if (!~domain.allowedMethods.indexOf(method) && method !== 'connect') {
+      event.source.postMessage(
+        {
+          id,
+          error: `${method} is not an allowed method from ${event.origin}`,
+        },
+        event.origin
+      );
+
+      return;
+    }
+
+    guestStorage[method](event, data);
+  };
+
+  const close = () => {
+    if (connected) {
+      return;
+    }
+    window.removeEventListener('message', handleMessage);
+    connected = false;
+  };
+
+  window.addEventListener('message', handleMessage);
+  connected = true;
+  return {
+    ...hostStorage,
+    close,
+  };
+};

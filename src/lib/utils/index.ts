@@ -6,7 +6,7 @@ import {
   PEPPER_APP_PROD_URL,
 } from '../config/constants';
 
-export { default as useStorage } from './storage';
+export { default as useStorage } from './storage/hostStorage';
 
 export { generateNickname } from './nicknames';
 
