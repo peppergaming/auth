@@ -6,14 +6,26 @@ const connectId = 'sessionAccessId-connected';
 const storage = useStorage();
 
 const hostStorage = {
-  get(key: string) {
-    return storage.getItem(key);
+  get(key: string, callback?) {
+    const item = storage.getItem(key);
+    if (callback) {
+      callback(null, item);
+    }
+    return item;
   },
-  set(key: string, value: string) {
-    return storage.setItem(key, value);
+  set(key: string, value: string, callback?) {
+    const item = storage.setItem(key, value);
+    if (callback) {
+      callback(null, item);
+    }
+    return item;
   },
-  remove(key: string) {
-    return storage.removeItem(key);
+  remove(key: string, callback?) {
+    storage.removeItem(key);
+    if (callback) {
+      callback(null, null);
+    }
+    return;
   },
 };
 
@@ -118,6 +130,7 @@ export const createHost = (allowedDomains: AllowedDomain[]): Storage => {
   window.addEventListener('message', handleMessage);
   connected = true;
   return {
+    type: 'host',
     ...hostStorage,
     close,
   };

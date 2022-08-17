@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import useStorage from './hostStorage';
 import { getId, Storage } from './utils';
 
 const prefix = 'sessionAccessId-';
@@ -8,6 +9,8 @@ const createId = () => prefix + Date.now();
 
 export const createGuest = (source, parent?): Storage => {
   parent = parent || document.body;
+
+  const storage = useStorage();
 
   let contentWindow;
   let callbacks = {};
@@ -118,19 +121,21 @@ export const createGuest = (source, parent?): Storage => {
       throw new Error('callback required for get');
     }
     message('get', key, null, callback);
-    return 'posted';
+    return storage.getItem(key);
   };
 
   const set = (key: string, value: string, callback) => {
     message('set', key, value, callback);
-    return true;
+    return storage.setItem(key, value);
   };
 
   const remove = (key: string, callback) => {
     message('remove', key, null, callback);
+    return storage.removeItem(key);
   };
 
   return {
+    type: 'guest',
     get,
     set,
     remove,

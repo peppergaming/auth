@@ -12,8 +12,9 @@ export const getId = (data) => {
 };
 
 export interface Storage {
+  type: 'host' | 'guest';
   get: (key: string, callback?: any) => string;
-  set: (key: string, value: string, callback: any) => boolean;
-  remove: (key: string, callback: any) => void;
+  set: (key: string, value: string, callback?: any) => boolean;
+  remove: (key: string, callback?: any) => void;
   close: () => void;
 }
