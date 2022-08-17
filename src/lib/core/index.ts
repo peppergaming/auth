@@ -188,7 +188,6 @@ const defaultUserInfo: UserInfo = {
  */
 export class PepperLogin {
   readonly options: PepperLoginOptions;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private web3Auth: Web3AuthCore | any;
   private loginToken?: string;
 
