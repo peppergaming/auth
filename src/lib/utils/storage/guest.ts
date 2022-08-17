@@ -84,8 +84,12 @@ export const createGuest = (source, parent?): Storage => {
       clearTimeout(connectedTimeout);
       while (sessionRequests.length) {
         const args: any = sessionRequests.pop();
-        // @ts-ignore
-        message(...args);
+        try {
+          // @ts-ignore
+          message(...args);
+        } catch (e) {
+          console.debug(e);
+        }
       }
 
       return;
@@ -117,9 +121,6 @@ export const createGuest = (source, parent?): Storage => {
   };
 
   const get = (key: string, callback) => {
-    if (!callback) {
-      throw new Error('callback required for get');
-    }
     message('get', key, null, callback);
     return storage.getItem(key);
   };
