@@ -77,6 +77,9 @@ export interface AllowedDomain {
 }
 
 export const createHost = (allowedDomains: AllowedDomain[]): Storage => {
+  // TODO remove this log
+  console.debug('creating host storage on domains: ', allowedDomains);
+
   let connected = false;
   const handleMessage = (event) => {
     const { data } = event;

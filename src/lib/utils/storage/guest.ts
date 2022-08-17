@@ -8,11 +8,13 @@ const prefix = 'sessionAccessId-';
 const createId = () => prefix + Date.now();
 
 export const createGuest = (source, parent?): Storage => {
+  // TODO remove this log
+  console.debug('creating guest storage on source: ', source);
+
   parent = parent || document.body;
 
   const storage = useStorage();
 
-  let contentWindow;
   let callbacks = {};
   const sessionRequests: any[] = [];
   let connected = false;
@@ -34,6 +36,8 @@ export const createGuest = (source, parent?): Storage => {
     const sessionAccessId = getId(response);
 
     if (sessionAccessId === 'sessionAccessId-connected') {
+      // TODO remove this log
+      console.debug('guest storage connected to: ', source);
       connected = true;
       return;
     }
@@ -67,7 +71,7 @@ export const createGuest = (source, parent?): Storage => {
     }
 
     if (isLoaded) {
-      contentWindow.postMessage(
+      iframe.contentWindow.postMessage(
         {
           method,
           key,
@@ -102,7 +106,6 @@ export const createGuest = (source, parent?): Storage => {
 
   function openStorage() {
     parent.appendChild(iframe);
-    contentWindow = iframe.contentWindow;
     closed = false;
 
     window.addEventListener('message', handleMessage);
