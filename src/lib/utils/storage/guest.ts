@@ -51,44 +51,7 @@ export const createGuest = (source, parent?): Storage => {
     }
   };
 
-  function checkConnected() {
-    if (connected) {
-      clearTimeout(connectedTimeout);
-      while (sessionRequests.length) {
-        const args: any = sessionRequests.pop();
-        // @ts-ignore
-        message(...args);
-      }
-
-      return;
-    }
-
-    message('connect');
-
-    connectedTimeout = setTimeout(checkConnected, 125);
-  }
-
-  const openStorage = () => {
-    parent.appendChild(iframe);
-    contentWindow = iframe.contentWindow;
-    closed = false;
-
-    window.addEventListener('message', handleMessage);
-
-    checkConnected();
-  };
-
-  openStorage();
-
-  const close = () => {
-    clearTimeout(connectedTimeout);
-    window.removeEventListener('message', handleMessage);
-    iframe.parentNode.removeChild(iframe);
-    connected = false;
-    closed = true;
-  };
-
-  const message = (method, key?, value?, callback?) => {
+  function message(method, key?, value?, callback?) {
     if (closed) {
       openStorage();
     }
@@ -114,6 +77,43 @@ export const createGuest = (source, parent?): Storage => {
         source
       );
     }
+  }
+
+  function checkConnected() {
+    if (connected) {
+      clearTimeout(connectedTimeout);
+      while (sessionRequests.length) {
+        const args: any = sessionRequests.pop();
+        // @ts-ignore
+        message(...args);
+      }
+
+      return;
+    }
+
+    message('connect');
+
+    connectedTimeout = setTimeout(checkConnected, 125);
+  }
+
+  function openStorage() {
+    parent.appendChild(iframe);
+    contentWindow = iframe.contentWindow;
+    closed = false;
+
+    window.addEventListener('message', handleMessage);
+
+    checkConnected();
+  }
+
+  openStorage();
+
+  const close = () => {
+    clearTimeout(connectedTimeout);
+    window.removeEventListener('message', handleMessage);
+    iframe.parentNode.removeChild(iframe);
+    connected = false;
+    closed = true;
   };
 
   const get = (key: string, callback) => {
