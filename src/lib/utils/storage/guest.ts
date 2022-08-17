@@ -121,7 +121,15 @@ export const createGuest = (source, parent?): Storage => {
   };
 
   const get = (key: string, callback) => {
-    message('get', key, null, callback);
+    const innerCallback = async (_: any, data: any) => {
+      if (data) {
+        storage.setItem(key, data);
+      }
+      if (callback) {
+        await callback();
+      }
+    };
+    message('get', key, null, innerCallback);
     return storage.getItem(key);
   };
 
