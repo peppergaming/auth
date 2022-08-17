@@ -24,6 +24,10 @@ export class WalletConnectAdapter {
     // this._settings = settings;
   }
 
+  get connected() {
+    return this._connector?.connected || false;
+  }
+
   get connector() {
     return this._connector;
   }
