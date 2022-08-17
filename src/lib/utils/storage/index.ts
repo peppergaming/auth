@@ -29,7 +29,7 @@ const initializeGuest = (): Storage => {
   tearDownSharedStorage();
   const isDev = IS_DEV || window.location.href.includes('localhost');
   const pepperUrl = isDev ? PEPPER_APP_DEV_URL : PEPPER_APP_PROD_URL;
-  guest = createGuest(`${pepperUrl}/login`);
+  guest = createGuest(`${pepperUrl}/login-check`);
   return guest;
 };
 
