@@ -53,6 +53,7 @@ export class WalletConnectAdapter {
 
   public async connect(
     onConnect: (provider: Web3Provider) => Promise<void>,
+    onModalClosed: () => Promise<void>,
     chainConfig?: ChainConfig
   ) {
     this.connector?.on('disconnect', async () => {
@@ -80,8 +81,9 @@ export class WalletConnectAdapter {
       await this.connector.createSession();
       logger.debug('WalletConnect opening modal');
 
-      QRCodeModal.open(this.connector.uri, () => {
+      QRCodeModal.open(this.connector.uri, async () => {
         logger.debug('WalletConnect Closed modal');
+        await onModalClosed();
       });
     } else {
       await this.onConnectionSuccess(onConnect);

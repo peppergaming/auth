@@ -101,6 +101,11 @@ export interface EventSubscriber {
   ) => Promise<void>;
 
   /**
+   * A function that is called when the WalletConnect Modal is closed.
+   */
+  onWalletConnectModalClosed?: () => Promise<void>;
+
+  /**
    * A function that is called when the sdk is disconnected.
    */
   onDisconnected?: () => Promise<void>;
@@ -142,6 +147,7 @@ const defaultEventSubscriber: EventSubscriber = {
   onConnecting: async () => {},
   onAuthChallengeSigning: async () => {},
   onConnected: async () => {},
+  onWalletConnectModalClosed: async () => {},
   onDisconnected: async () => {},
   onErrored: async () => {},
 };
@@ -585,9 +591,14 @@ export class PepperLogin {
       return null;
     }
 
+    const onModalClosed = async () => {
+      await this.subscriber?.onWalletConnectModalClosed();
+    };
+
     try {
       await this.walletConnectAdapter?.connect(
         this.onWalletConnectConnection,
+        onModalClosed,
         this.options.chainConfig
       );
     } catch (e) {
