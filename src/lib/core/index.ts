@@ -135,7 +135,7 @@ export interface PepperLoginOptions {
   isDevelopment?: boolean;
   eventSubscriber?: EventSubscriber;
   deepHydration?: boolean;
-  deepHydrationTimeout: number;
+  deepHydrationTimeout?: number;
 }
 
 export interface UserInfo {
@@ -184,7 +184,7 @@ const defaultPepperLoginOptions: PepperLoginOptions = {
   isMobile: false,
   isDevelopment: false,
   deepHydration: false,
-  deepHydrationTimeout: 10000,
+  deepHydrationTimeout: 5000,
 };
 
 const defaultUserInfo: UserInfo = {
@@ -229,7 +229,7 @@ export class PepperLogin {
   private subscriber?: EventSubscriber = defaultEventSubscriber;
   private currentStatus: LOGIN_STATUS_TYPE = LOGIN_STATUS.NOT_READY;
   private connectionIssued = false;
-  private _hydrationTimedOut = false;
+  private _deepHydrationTimedOut = false;
   #provider: Provider | null = null;
   #signer: PepperWallet | null = null;
 
@@ -261,7 +261,7 @@ export class PepperLogin {
       chainConfig: { chainNamespace: 'other' },
     });
 
-    this._hydrationTimedOut = !this.options.deepHydration;
+    this._deepHydrationTimedOut = !this.options.deepHydration;
     this.initialized = false;
 
     this.externalWalletConnection = this.externalWalletConnection.bind(this);
@@ -282,16 +282,16 @@ export class PepperLogin {
       return;
     }
 
-    if (this._hydrationTimedOut) {
+    if (this._deepHydrationTimedOut) {
       await this.subscriber?.onDeepHydrationCompleted(false);
       return;
     }
 
     logger.debug('Deep hydration');
-    this.currentStatus = LOGIN_STATUS.HYDRATING;
+    this.currentStatus = LOGIN_STATUS.DEEP_HYDRATING;
 
     const openLoginStorageCallback = async (error: any, data: any) => {
-      if (this._hydrationTimedOut) {
+      if (this._deepHydrationTimedOut) {
         return;
       }
       if (error) {
@@ -304,7 +304,7 @@ export class PepperLogin {
 
     this.storage.get(OPENLOGIN_STORE_KEY, openLoginStorageCallback);
     const accessTokenStorageCallback = (error: any, data: any) => {
-      if (this._hydrationTimedOut) {
+      if (this._deepHydrationTimedOut) {
         return;
       }
       if (error) {
@@ -321,7 +321,7 @@ export class PepperLogin {
     this.storage.get(PEPPER_ACCESS_TOKEN_KEY, accessTokenStorageCallback);
 
     const web3AuthAdapterStorageCallback = (error: any, data: any) => {
-      if (this._hydrationTimedOut) {
+      if (this._deepHydrationTimedOut) {
         return;
       }
       if (error) {
@@ -353,10 +353,22 @@ export class PepperLogin {
   public async init(forceHydration = false): Promise<InitInfo> {
     logger.debug('Initializing  local PepperLogin');
     const willDeepHydrate =
-      this.options.deepHydration && deepHydrationAvailable();
+      !!this.options.deepHydration && deepHydrationAvailable();
 
-    setTimeout(() => {
-      this._hydrationTimedOut = true;
+    setTimeout(async () => {
+      this._deepHydrationTimedOut = true;
+      if (this.currentStatus === LOGIN_STATUS.DEEP_HYDRATING) {
+        this.currentStatus = LOGIN_STATUS.READY;
+      }
+      const successStatus = [
+        LOGIN_STATUS.CONNECTING,
+        LOGIN_STATUS.CONNECTED,
+        LOGIN_STATUS.PEPPER_CONNECTED,
+        LOGIN_STATUS.HYDRATING,
+        LOGIN_STATUS.PEPPER_VERIFY,
+        LOGIN_STATUS.PEPPER_INIT,
+      ].some((s) => s === this.currentStatus);
+      await this.subscriber?.onDeepHydrationCompleted(successStatus);
     }, this.options.deepHydrationTimeout);
 
     if (isElectron()) {
@@ -480,6 +492,15 @@ export class PepperLogin {
         if (!this.connectionIssued) {
           await this.hydrateSession();
         }
+        this.storage.set(
+          WEB3AUTH_CACHED_ADAPTER_KEY,
+          'openlogin',
+          (_: any, data: any) => {
+            if (data) {
+              logger.debug('Web3Auth cached adapter dispatched');
+            }
+          }
+        );
         logger.info('Connected');
         logger.debug('Connected with data: ', data);
       }
@@ -718,7 +739,7 @@ export class PepperLogin {
 
     this.#signer = new InternalWallet(
       this.openloginAdapter,
-      this.options.chainConfig
+      this.options.chainConfig || defaultChainConfig
     );
 
     this.#provider = this.#signer.provider || null;

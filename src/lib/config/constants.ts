@@ -27,6 +27,7 @@ export const LOGIN_STATUS = {
   CONNECTED: 'connected',
   DISCONNECTED: 'disconnected',
   ERRORED: 'errored',
+  DEEP_HYDRATING: 'deep_hydrating',
   HYDRATING: 'hydrating',
   PEPPER_INIT: 'pepper_init',
   PEPPER_VERIFY: 'pepper_verify',
