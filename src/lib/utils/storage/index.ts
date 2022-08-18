@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import {
   IS_DEV,
   PEPPER_APP_DEV_URL,
@@ -54,5 +56,13 @@ export const tearDownSharedStorage = () => {
   if (guest) {
     guest.close();
     guest = null;
+  }
+};
+
+export const deepHydrationAvailable = () => {
+  try {
+    return ALLOWED_DOMAINS.some((d) => window.location.href.includes(d.origin));
+  } catch (e) {
+    return false;
   }
 };
