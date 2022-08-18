@@ -213,6 +213,9 @@ export class PepperLogin {
   #signer: PepperWallet | null = null;
 
   constructor(options?: Partial<PepperLoginOptions>) {
+    this.deepHydration = this.deepHydration.bind(this);
+    this.storage = initializeSharedStorage(this.deepHydration);
+
     this.options = defaultPepperLoginOptions;
     if (options) {
       this.options = { ...defaultPepperLoginOptions, ...options };

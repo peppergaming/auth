@@ -25,15 +25,15 @@ const initializeHost = (): Storage => {
   return host;
 };
 
-const initializeGuest = (): Storage => {
+const initializeGuest = (onConnection?: any): Storage => {
   tearDownSharedStorage();
   const isDev = IS_DEV || window.location.href.includes('localhost');
   const pepperUrl = isDev ? PEPPER_APP_DEV_URL : PEPPER_APP_PROD_URL;
-  guest = createGuest(`${pepperUrl}/login-check`);
+  guest = createGuest(`${pepperUrl}/login-check`, onConnection);
   return guest;
 };
 
-export const initializeSharedStorage: () => Storage = () => {
+export const initializeSharedStorage = (onConnection?: any) => {
   if (
     [PEPPER_APP_DEV_URL, PEPPER_APP_PROD_URL].some((url) =>
       window.location.href.includes(url)
@@ -41,7 +41,7 @@ export const initializeSharedStorage: () => Storage = () => {
   ) {
     return initializeHost();
   } else {
-    return initializeGuest();
+    return initializeGuest(onConnection);
   }
 };
 

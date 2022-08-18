@@ -7,11 +7,11 @@ const prefix = 'sessionAccessId-';
 
 const createId = () => prefix + Date.now();
 
-export const createGuest = (source, parent?): Storage => {
+export const createGuest = (source, onConnection?: any): Storage => {
   // TODO remove this log
   console.debug('creating guest storage on source: ', source);
 
-  parent = parent || document.body;
+  const parent = document.body;
 
   const storage = useStorage();
 
@@ -38,6 +38,9 @@ export const createGuest = (source, parent?): Storage => {
     if (sessionAccessId === 'sessionAccessId-connected') {
       // TODO remove this log
       console.debug('guest storage connected to: ', source);
+      if (onConnection) {
+        await onConnection();
+      }
       connected = true;
       return;
     }
