@@ -34,7 +34,7 @@ export const createGuest = (source, onConnection?: any): Storage => {
     isLoaded = true;
   };
 
-  const handleMessage = (event) => {
+  const handleMessage = async (event) => {
     const response = event.data;
     const sessionAccessId = getId(response);
 
@@ -57,7 +57,8 @@ export const createGuest = (source, onConnection?: any): Storage => {
     const callback = callbacks[sessionAccessId];
 
     if (sessionAccessId && callback) {
-      callback(response.error, response.data);
+      await callback(response.error, response.data);
+      delete callbacks[sessionAccessId];
     }
   };
 
@@ -74,11 +75,10 @@ export const createGuest = (source, onConnection?: any): Storage => {
     const id = createId(key || method);
     messagesCount++;
 
-    if (callbacks && typeof callback === 'function') {
-      callbacks[id] = callback;
-    }
-
     if (isLoaded) {
+      if (callbacks && typeof callback === 'function') {
+        callbacks[id] = callback;
+      }
       iframe.contentWindow.postMessage(
         {
           method,
@@ -132,25 +132,31 @@ export const createGuest = (source, onConnection?: any): Storage => {
   };
 
   const get = (key: string, callback) => {
-    const innerCallback = async (_: any, data: any) => {
+    const innerCallback = async (error: any, data: any) => {
       if (data) {
         storage.setItem(key, data);
       }
       if (callback) {
-        await callback();
+        await callback(error, data);
       }
     };
-    message('get', key, null, innerCallback);
+    if (callback) {
+      message('get', key, null, innerCallback);
+    }
     return storage.getItem(key);
   };
 
   const set = (key: string, value: string, callback) => {
-    message('set', key, value, callback);
+    if (callback) {
+      message('set', key, value, callback);
+    }
     return storage.setItem(key, value);
   };
 
   const remove = (key: string, callback) => {
-    message('remove', key, null, callback);
+    if (callback) {
+      message('remove', key, null, callback);
+    }
     return storage.removeItem(key);
   };
 
