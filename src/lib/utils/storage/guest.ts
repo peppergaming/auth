@@ -3,9 +3,11 @@
 import useStorage from './hostStorage';
 import { getId, Storage } from './utils';
 
-const prefix = 'sessionAccessId-';
+const prefix = 'sessionAccessId';
+let messagesCount = 0;
 
-const createId = () => prefix + Date.now();
+const createId = (key: string) =>
+  `${prefix}-${Date.now()}-${key}-${messagesCount}`;
 
 export const createGuest = (source, onConnection?: any): Storage => {
   // TODO remove this log
@@ -15,7 +17,7 @@ export const createGuest = (source, onConnection?: any): Storage => {
 
   const storage = useStorage();
 
-  let callbacks = {};
+  let callbacks: any = {};
   const sessionRequests: any[] = [];
   let connected = false;
   let closed = true;
@@ -23,6 +25,7 @@ export const createGuest = (source, onConnection?: any): Storage => {
   let isLoaded = false;
 
   const iframe: HTMLIFrameElement = document.createElement('iframe');
+  iframe.id = `pepper-${createId('iframe')}`;
   iframe.src = source;
   iframe.width = '0';
   iframe.height = '0';
@@ -65,9 +68,11 @@ export const createGuest = (source, onConnection?: any): Storage => {
 
     if (!connected && method !== 'connect') {
       sessionRequests.push([method, key, value, callback]);
+      return;
     }
 
-    const id = createId();
+    const id = createId(key || method);
+    messagesCount++;
 
     if (callbacks && typeof callback === 'function') {
       callbacks[id] = callback;
