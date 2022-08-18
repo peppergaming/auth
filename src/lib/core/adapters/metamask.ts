@@ -5,7 +5,7 @@ import MetaMaskOnboarding from '@metamask/onboarding';
 import { MetaMaskInpageProvider } from '@metamask/providers';
 import { ethers } from 'ethers';
 
-import { ChainConfig } from '../../../types';
+import { ChainConfig } from '../../config/constants';
 import logger from '../../config/logger';
 
 declare global {

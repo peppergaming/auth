@@ -91,3 +91,12 @@ export const ADAPTER_EVENTS = {
 } as const;
 export type ADAPTER_STATUS_TYPE =
   typeof ADAPTER_STATUS[keyof typeof ADAPTER_STATUS];
+
+// TODO document this
+export interface ChainConfig {
+  chainNamespace?: typeof CHAIN_NAMESPACES[keyof typeof CHAIN_NAMESPACES];
+  chainType?: typeof CHAIN_TYPE[keyof typeof CHAIN_TYPE];
+  chainId?: string;
+  name?: string;
+  rpcTarget?: string;
+}

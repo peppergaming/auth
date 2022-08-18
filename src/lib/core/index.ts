@@ -8,7 +8,6 @@ import { Web3AuthCore } from '@web3auth/core';
 import { OpenloginAdapter } from '@web3auth/openlogin-adapter';
 import { ethers } from 'ethers';
 
-import { ChainConfig } from '../../types';
 import {
   ADAPTER_EVENTS,
   ADAPTER_STATUS,

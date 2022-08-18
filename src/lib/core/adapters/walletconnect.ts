@@ -6,8 +6,7 @@ import QRCodeModal from '@walletconnect/qrcode-modal';
 import WalletConnectProvider from '@walletconnect/web3-provider';
 import { ethers } from 'ethers';
 
-import { ChainConfig } from '../../../types';
-import { PEPPER_INFURA_ID } from '../../config/constants';
+import { ChainConfig, PEPPER_INFURA_ID } from '../../config/constants';
 import logger from '../../config/logger';
 
 const defaultSettings = {
