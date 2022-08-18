@@ -14,17 +14,20 @@ import {
   AUTH_METHODS,
   CHAIN_NAMESPACES,
   CHAIN_TYPE,
+  ChainConfig,
   IS_DEV,
   LOGIN_PROVIDER,
   LOGIN_PROVIDER_TYPE,
   LOGIN_STATUS,
   LOGIN_STATUS_TYPE,
+  OPENLOGIN_STORE_KEY,
   PEPPER_ACCESS_TOKEN_KEY,
   PEPPER_CACHED_WALLET_KEY,
   PEPPER_METAMASK,
   PEPPER_WALLETCONNECT,
   PERSONAL_SIGN_PREFIX,
   WALLET_CONNECT_KEY,
+  WEB3AUTH_CACHED_ADAPTER_KEY,
   WEB3AUTH_CLIENT_ID,
   WEB3AUTH_CLIENT_ID_DEV,
 } from '../config/constants';
@@ -35,7 +38,10 @@ import logger, {
 } from '../config/logger';
 import { PepperApi } from '../pepperApi';
 import { generateNickname, isElectron } from '../utils';
-import { initializeSharedStorage } from '../utils/storage';
+import {
+  deepHydrationAvailable,
+  initializeSharedStorage,
+} from '../utils/storage';
 import { Storage } from '../utils/storage/utils';
 import { ExternalWallet, InternalWallet, PepperWallet } from '../wallet';
 
@@ -100,6 +106,11 @@ export interface EventSubscriber {
   ) => Promise<void>;
 
   /**
+   * A function that is called when deepHydration is completed.
+   */
+  onDeepHydrationCompleted?: (success: boolean) => Promise<void>;
+
+  /**
    * A function that is called when the WalletConnect Modal is closed.
    */
   onWalletConnectModalClosed?: () => Promise<void>;
@@ -123,6 +134,8 @@ export interface PepperLoginOptions {
   isMobile?: boolean;
   isDevelopment?: boolean;
   eventSubscriber?: EventSubscriber;
+  deepHydration?: boolean;
+  deepHydrationTimeout: number;
 }
 
 export interface UserInfo {
@@ -142,10 +155,16 @@ interface Web3Info {
   idToken?: string;
 }
 
+interface InitInfo {
+  initialized: boolean;
+  willDeepHydrate: boolean;
+}
+
 const defaultEventSubscriber: EventSubscriber = {
   onConnecting: async () => {},
   onAuthChallengeSigning: async () => {},
   onConnected: async () => {},
+  onDeepHydrationCompleted: async () => {},
   onWalletConnectModalClosed: async () => {},
   onDisconnected: async () => {},
   onErrored: async () => {},
@@ -164,6 +183,8 @@ const defaultPepperLoginOptions: PepperLoginOptions = {
   logLevel: DEFAULT_LEVEL,
   isMobile: false,
   isDevelopment: false,
+  deepHydration: false,
+  deepHydrationTimeout: 10000,
 };
 
 const defaultUserInfo: UserInfo = {
@@ -208,7 +229,7 @@ export class PepperLogin {
   private subscriber?: EventSubscriber = defaultEventSubscriber;
   private currentStatus: LOGIN_STATUS_TYPE = LOGIN_STATUS.NOT_READY;
   private connectionIssued = false;
-
+  private _hydrationTimedOut = false;
   #provider: Provider | null = null;
   #signer: PepperWallet | null = null;
 
@@ -236,46 +257,119 @@ export class PepperLogin {
         ...options.chainConfig,
       };
     }
-
-    this.initialized = false;
     this.web3Auth = new Web3AuthCore({
       chainConfig: { chainNamespace: 'other' },
     });
+
+    this._hydrationTimedOut = !this.options.deepHydration;
+    this.initialized = false;
+
     this.externalWalletConnection = this.externalWalletConnection.bind(this);
     this.onWalletConnectConnection = this.onWalletConnectConnection.bind(this);
     logger.info('Created pepper login instance');
   }
 
-  public async init() {
-    this.storage = initializeSharedStorage();
-    let remoteStorageCallback = null;
+  private async deepHydration() {
+    if (
+      !this.options.deepHydration ||
+      [
+        LOGIN_STATUS.PEPPER_CONNECTED,
+        LOGIN_STATUS.CONNECTED,
+        LOGIN_STATUS.CONNECTING,
+      ].some((s) => s.includes(this.currentStatus))
+    ) {
+      await this.subscriber?.onDeepHydrationCompleted(true);
+      return;
+    }
 
-    if (this.storage.type === 'guest') {
-      remoteStorageCallback = (error: any, data: any) => {
-        if (error) {
-          logger.error(error);
-        }
+    if (this._hydrationTimedOut) {
+      await this.subscriber?.onDeepHydrationCompleted(false);
+      return;
+    }
+
+    logger.debug('Deep hydration');
+    this.currentStatus = LOGIN_STATUS.HYDRATING;
+
+    const openLoginStorageCallback = async (error: any, data: any) => {
+      if (this._hydrationTimedOut) {
+        return;
+      }
+      if (error) {
+        logger.error(error);
+      }
+      if (data) {
+        this.storage.set(OPENLOGIN_STORE_KEY, data);
+      }
+    };
+
+    this.storage.get(OPENLOGIN_STORE_KEY, openLoginStorageCallback);
+    const accessTokenStorageCallback = (error: any, data: any) => {
+      if (this._hydrationTimedOut) {
+        return;
+      }
+      if (error) {
+        logger.error(error);
+      }
+      if (data) {
         this.pepperApi = new PepperApi({
           accessToken: data,
           isDevelopment: this.options.isDevelopment,
         });
-      };
+      }
+    };
+
+    this.storage.get(PEPPER_ACCESS_TOKEN_KEY, accessTokenStorageCallback);
+
+    const web3AuthAdapterStorageCallback = (error: any, data: any) => {
+      if (this._hydrationTimedOut) {
+        return;
+      }
+      if (error) {
+        logger.error(error);
+      }
+      if (data) {
+        setTimeout(async () => {
+          const web3authCached = this.storage.get(OPENLOGIN_STORE_KEY);
+          const accessToken = this.storage.get(
+            PEPPER_ACCESS_TOKEN_KEY,
+            accessTokenStorageCallback
+          );
+
+          if (web3authCached && accessToken) {
+            logger.debug('Deep hydration successful');
+            await this.init(true);
+            await this.subscriber?.onDeepHydrationCompleted(true);
+          }
+        }, 1000);
+      }
+    };
+
+    this.storage.get(
+      WEB3AUTH_CACHED_ADAPTER_KEY,
+      web3AuthAdapterStorageCallback
+    );
+  }
+
+  public async init(forceHydration = false): Promise<InitInfo> {
+    logger.debug('Initializing  local PepperLogin');
+    const willDeepHydrate =
+      this.options.deepHydration && deepHydrationAvailable();
+
+    setTimeout(() => {
+      this._hydrationTimedOut = true;
+    }, this.options.deepHydrationTimeout);
+
+    if (isElectron()) {
+      this.initialized = true;
+      return { initialized: this.initialized, willDeepHydrate };
     }
 
-    const pepperAccessToken = this.storage.get(
-      PEPPER_ACCESS_TOKEN_KEY,
-      remoteStorageCallback
-    );
+    const pepperAccessToken = this.storage.get(PEPPER_ACCESS_TOKEN_KEY);
 
     this.pepperApi = new PepperApi({
       accessToken: pepperAccessToken,
       isDevelopment: this.options.isDevelopment,
     });
-
-    if (isElectron()) {
-      this.initialized = true;
-      return;
-    }
 
     const uxMode: UX_MODE_TYPE = this.options.isMobile ? 'redirect' : 'popup';
     const web3authClientId = IS_DEV
@@ -283,7 +377,12 @@ export class PepperLogin {
       : WEB3AUTH_CLIENT_ID;
 
     try {
-      if (!this.openloginAdapter) {
+      if (forceHydration) {
+        this.web3Auth = new Web3AuthCore({
+          chainConfig: { chainNamespace: 'other' },
+        });
+      }
+      if (forceHydration || !this.openloginAdapter) {
         this.openloginAdapter = await openLoginAdapterBuilder(
           uxMode,
           web3authClientId,
@@ -291,6 +390,7 @@ export class PepperLogin {
         );
         this.web3Auth.configureAdapter(this.openloginAdapter);
       }
+
       if (this.web3Auth.status !== ADAPTER_STATUS.READY) {
         this.subscribeToAdapterEvents();
         await this.web3Auth.init();
@@ -298,29 +398,7 @@ export class PepperLogin {
 
       this.loginToken = undefined;
 
-      if (this.storage.type === 'guest') {
-        remoteStorageCallback = async (error: any, data: any) => {
-          if (error) {
-            logger.error(error);
-          }
-          walletConnectSettings = data;
-          if (
-            walletConnectSettings &&
-            walletConnectSettings.connected &&
-            !this.walletConnectAdapter.connected
-          ) {
-            walletConnectSettings = JSON.parse(walletConnectSettings);
-            this.walletConnectAdapter = new WalletConnectAdapter(
-              walletConnectSettings
-            );
-          }
-        };
-      }
-
-      let walletConnectSettings: any = this.storage.get(
-        WALLET_CONNECT_KEY,
-        remoteStorageCallback
-      );
+      let walletConnectSettings: any = this.storage.get(WALLET_CONNECT_KEY);
 
       if (walletConnectSettings) {
         walletConnectSettings = JSON.parse(walletConnectSettings);
@@ -337,26 +415,7 @@ export class PepperLogin {
 
       this.metamaskAdapter = new MetaMaskAdapter();
 
-      if (this.storage.type === 'guest') {
-        remoteStorageCallback = async (error: any, data: any) => {
-          if (error) {
-            logger.error(error);
-          }
-          const cachedWallet = data;
-          if (cachedWallet && cachedWallet === PEPPER_METAMASK) {
-            await this.connectToMetaMask();
-          } else if (cachedWallet && cachedWallet === PEPPER_WALLETCONNECT) {
-            if (walletConnectSettings.connected) {
-              await this.connectToWalletConnect();
-            }
-          }
-        };
-      }
-
-      const cachedWallet = this.storage.get(
-        PEPPER_CACHED_WALLET_KEY,
-        remoteStorageCallback
-      );
+      const cachedWallet = this.storage.get(PEPPER_CACHED_WALLET_KEY);
 
       if (cachedWallet && cachedWallet === PEPPER_METAMASK) {
         await this.connectToMetaMask();
@@ -375,6 +434,7 @@ export class PepperLogin {
     } catch (e) {
       logger.error('Error while initializing PepperLogin: ', e);
     }
+    return { initialized: this.initialized, willDeepHydrate };
   }
 
   get userInfo(): Partial<UserInfo> | null {
@@ -398,22 +458,7 @@ export class PepperLogin {
   }
 
   get pepperAccessToken() {
-    let callBack = null;
-    if (this.storage && this.storage.type === 'guest') {
-      callBack = (error: any, data: any) => {
-        if (error) {
-          logger.error(error);
-        }
-
-        if (data) {
-          this.pepperApi = new PepperApi({
-            accessToken: data,
-            isDevelopment: this.options.isDevelopment,
-          });
-        }
-      };
-    }
-    return this.storage.get(PEPPER_ACCESS_TOKEN_KEY, callBack);
+    return this.storage.get(PEPPER_ACCESS_TOKEN_KEY);
   }
 
   set eventSubscriber(eventSubscriber: EventSubscriber) {
@@ -610,7 +655,15 @@ export class PepperLogin {
   }
 
   private async hydratePepper(accessToken: string) {
-    this.storage.set(PEPPER_ACCESS_TOKEN_KEY, accessToken);
+    this.storage.set(
+      PEPPER_ACCESS_TOKEN_KEY,
+      accessToken,
+      (_: any, data: any) => {
+        if (data) {
+          logger.debug('Pepper Access Token dispatched');
+        }
+      }
+    );
     this.pepperApi.setAccessToken(accessToken);
     this.currentStatus = LOGIN_STATUS.PEPPER_CONNECTED;
     this.loginToken = null;
@@ -765,9 +818,12 @@ export class PepperLogin {
 
     this.#provider = null;
     this.#signer = null;
-    this.storage.remove(PEPPER_ACCESS_TOKEN_KEY);
-    this.storage.remove(PEPPER_CACHED_WALLET_KEY);
-    this.storage.remove(WALLET_CONNECT_KEY);
+
+    const callback = () => {};
+    this.storage.remove(WEB3AUTH_CACHED_ADAPTER_KEY, callback);
+    this.storage.remove(PEPPER_ACCESS_TOKEN_KEY, callback);
+    this.storage.remove(PEPPER_CACHED_WALLET_KEY, callback);
+    this.storage.remove(WALLET_CONNECT_KEY, callback);
 
     this.web3Auth.clearCache();
     this.pepperApi.setAccessToken(null);

@@ -45,6 +45,8 @@ export const PEPPER_APP_OAUTH_PATH = 'oauth';
 
 export const PEPPER_ACCESS_TOKEN_KEY = 'PEPPER_ACCESS_TOKEN';
 export const PEPPER_CACHED_WALLET_KEY = 'PEPPER_CACHED_WALLET_KEY';
+export const OPENLOGIN_STORE_KEY = 'openlogin_store';
+export const WEB3AUTH_CACHED_ADAPTER_KEY = 'Web3Auth-cachedAdapter';
 export const WALLET_CONNECT_KEY = 'walletconnect';
 export const PERSONAL_SIGN_PREFIX =
   'Please sign this message to verify your identity: ';
