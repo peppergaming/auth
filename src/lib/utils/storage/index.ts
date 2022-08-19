@@ -17,7 +17,7 @@ let guest: Storage = null;
 
 const ALLOWED_DOMAINS: AllowedDomain[] = [
   {
-    origin: 'https://demo.peppergaming.com/',
+    origin: 'https://demo.peppergaming.com',
     allowedMethods: ['get', 'set', 'remove'],
   },
 ];
