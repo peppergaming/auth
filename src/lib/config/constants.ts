@@ -95,6 +95,26 @@ export const ADAPTER_EVENTS = {
 export type ADAPTER_STATUS_TYPE =
   typeof ADAPTER_STATUS[keyof typeof ADAPTER_STATUS];
 
+export const RPC_MAPS = {
+  1: `https://mainnet.infura.io/v3/${PEPPER_INFURA_ID}`,
+  4: 'https://rpc.ankr.com/rinkeby',
+  10: 'https://rpc.ankr.com/optimism',
+  56: 'https://rpc.ankr.com/bsc',
+  66: 'https://exchainrpc.okex.org',
+  137: 'https://rpc.ankr.com/polygon',
+  25: 'https://evm.cronos.org',
+  97: 'https://bsctestapi.terminet.io/rpc',
+  100: 'https://rpc.ankr.com/gnosis',
+  106: 'https://evmexplorer.velas.com/rpc',
+  128: 'https://hecoapi.terminet.io/rpc',
+  199: 'https://rpc.bittorrentchain.io',
+  250: 'https://rpc.ankr.com/fantom',
+  26863: 'https://rpc3.oasischain.io',
+  42161: 'https://rpc.ankr.com/arbitrum',
+  43114: 'https://rpc.ankr.com/avalanche',
+  1313161554: 'https://mainnet.aurora.dev',
+};
+
 // TODO document this
 export interface ChainConfig {
   chainNamespace?: typeof CHAIN_NAMESPACES[keyof typeof CHAIN_NAMESPACES];

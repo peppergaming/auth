@@ -6,7 +6,11 @@ import QRCodeModal from '@walletconnect/qrcode-modal';
 import WalletConnectProvider from '@walletconnect/web3-provider';
 import { ethers } from 'ethers';
 
-import { ChainConfig, PEPPER_INFURA_ID } from '../../config/constants';
+import {
+  ChainConfig,
+  PEPPER_INFURA_ID,
+  RPC_MAPS,
+} from '../../config/constants';
 import logger from '../../config/logger';
 
 const defaultSettings = {
@@ -17,6 +21,7 @@ export class WalletConnectAdapter {
   private _connector?: WalletConnect;
   // private _settings;
   private _provider?: Web3Provider;
+  private _chainId = 1;
 
   constructor(settings = defaultSettings) {
     this._connector = new WalletConnect(settings);
@@ -36,18 +41,29 @@ export class WalletConnectAdapter {
     chainConfig?: ChainConfig
   ) {
     QRCodeModal.close();
-    const options: any = { connector: this._connector };
+    await this.configureProvider(chainConfig);
+    await onConnect(this._provider);
+  }
+
+  private async configureProvider(chainConfig?: ChainConfig) {
+    const options: any = {
+      connector: this._connector,
+      rpc: RPC_MAPS,
+      chainId: this._chainId,
+    };
     if (chainConfig && chainConfig.rpcTarget) {
       options.rpc = chainConfig.rpcTarget;
-      options.chainId = chainConfig.chainId || '1';
+      options.chainId = chainConfig.chainId || this._chainId;
     } else {
       options.infuraId = PEPPER_INFURA_ID;
     }
-
     const wcProvider = new WalletConnectProvider(options);
-    await wcProvider.enable();
+    try {
+      await wcProvider.enable();
+    } catch (e) {
+      logger.error(e);
+    }
     this._provider = new ethers.providers.Web3Provider(wcProvider);
-    await onConnect(this._provider);
   }
 
   public async connect(
@@ -71,6 +87,7 @@ export class WalletConnectAdapter {
         if (error) {
           logger.error('Error on wallet connect connection: ', error);
         } else {
+          this._chainId = payload.params[0].chainId;
           await this.onConnectionSuccess(onConnect, chainConfig);
         }
       }
