@@ -2,7 +2,6 @@
 
 import { Provider, Web3Provider } from '@ethersproject/providers';
 import { JsonRpcProvider } from '@ethersproject/providers';
-import { CUSTOM_LOGIN_PROVIDER_TYPE } from '@toruslabs/openlogin/src/constants';
 import { CONNECTED_EVENT_DATA } from '@web3auth/base';
 import { Web3AuthCore } from '@web3auth/core';
 import { OpenloginAdapter } from '@web3auth/openlogin-adapter';
@@ -53,6 +52,7 @@ import {
 } from './adapters';
 
 export { ChainConfig };
+const web3authClientId = IS_DEV ? WEB3AUTH_CLIENT_ID_DEV : WEB3AUTH_CLIENT_ID;
 
 /**
  * Example of usage
@@ -144,7 +144,7 @@ export interface UserInfo {
   email?: string;
   name?: string;
   profileImage?: string;
-  typeOfLogin?: LOGIN_PROVIDER_TYPE | CUSTOM_LOGIN_PROVIDER_TYPE;
+  typeOfLogin?: LOGIN_PROVIDER_TYPE;
 }
 
 interface Web3Info {
@@ -258,6 +258,7 @@ export class PepperLogin {
       };
     }
     this.web3Auth = new Web3AuthCore({
+      clientId: web3authClientId,
       chainConfig: { chainNamespace: 'other' },
     });
 
@@ -384,13 +385,11 @@ export class PepperLogin {
     });
 
     const uxMode: UX_MODE_TYPE = this.options.isMobile ? 'redirect' : 'popup';
-    const web3authClientId = IS_DEV
-      ? WEB3AUTH_CLIENT_ID_DEV
-      : WEB3AUTH_CLIENT_ID;
 
     try {
       if (forceHydration) {
         this.web3Auth = new Web3AuthCore({
+          clientId: web3authClientId,
           chainConfig: { chainNamespace: 'other' },
         });
       }
