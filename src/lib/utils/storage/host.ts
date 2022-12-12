@@ -1,4 +1,6 @@
-import useStorage from './hostStorage';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+import useStorage from './useStorage';
 import { getId, Storage } from './utils';
 
 const connectId = 'sessionAccessId-connected';
@@ -6,21 +8,21 @@ const connectId = 'sessionAccessId-connected';
 const storage = useStorage();
 
 const hostStorage = {
-  get(key: string, callback?) {
+  get(key: string, callback?: any) {
     const item = storage.getItem(key);
     if (callback) {
       callback(null, item);
     }
     return item;
   },
-  set(key: string, value: string, callback?) {
+  set(key: string, value: string, callback?: any) {
     const item = storage.setItem(key, value);
     if (callback) {
       callback(null, item);
     }
     return item;
   },
-  remove(key: string, callback?) {
+  remove(key: string, callback?: any) {
     storage.removeItem(key);
     if (callback) {
       callback(null, null);
@@ -30,7 +32,7 @@ const hostStorage = {
 };
 
 const guestStorage = {
-  get(event, data) {
+  get(event: any, data: any) {
     event.source.postMessage(
       {
         id: data.id,
@@ -39,7 +41,7 @@ const guestStorage = {
       event.origin
     );
   },
-  set(event, data) {
+  set(event: any, data: any) {
     storage.setItem(data.key, data.value);
 
     event.source.postMessage(
@@ -49,7 +51,7 @@ const guestStorage = {
       event.origin
     );
   },
-  remove(event, data) {
+  remove(event: any, data: any) {
     storage.removeItem(data.key);
 
     event.source.postMessage(
@@ -59,7 +61,7 @@ const guestStorage = {
       event.origin
     );
   },
-  connect(event) {
+  connect(event: any) {
     event.source.postMessage(
       {
         id: connectId,
@@ -73,7 +75,7 @@ type Method = 'get' | 'set' | 'remove';
 
 export interface AllowedDomain {
   origin: string;
-  allowedMethods?: Method[];
+  allowedMethods: Method[];
 }
 
 export const createHost = (allowedDomains: AllowedDomain[]): Storage => {
@@ -81,7 +83,7 @@ export const createHost = (allowedDomains: AllowedDomain[]): Storage => {
   console.debug('creating host storage on domains: ', allowedDomains);
 
   let connected = false;
-  const handleMessage = (event) => {
+  const handleMessage = (event: any) => {
     const { data } = event;
     const domain = allowedDomains.find(
       (allowedDomain) => event.origin === allowedDomain.origin
@@ -119,6 +121,7 @@ export const createHost = (allowedDomains: AllowedDomain[]): Storage => {
       return;
     }
 
+    // @ts-ignore
     guestStorage[method](event, data);
   };
 

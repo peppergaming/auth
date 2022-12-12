@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
-import useStorage from './hostStorage';
+import useStorage from './useStorage';
 import { getId, Storage } from './utils';
 
 const prefix = 'sessionAccessId';
@@ -9,9 +8,8 @@ let messagesCount = 0;
 const createId = (key: string) =>
   `${prefix}-${Date.now()}-${key}-${messagesCount}`;
 
-export const createGuest = (source, onConnection?: any): Storage => {
-  // TODO remove this log
-  console.debug('creating guest storage on source: ', source);
+export const createGuest = (source: any, onConnection?: any): Storage => {
+  // console.debug("creating guest storage on source: ", source);
 
   const parent = document.body;
 
@@ -21,7 +19,7 @@ export const createGuest = (source, onConnection?: any): Storage => {
   const sessionRequests: any[] = [];
   let connected = false;
   let closed = true;
-  let connectedTimeout;
+  let connectedTimeout: any = null;
   let isLoaded = false;
 
   const iframe: HTMLIFrameElement = document.createElement('iframe');
@@ -34,7 +32,7 @@ export const createGuest = (source, onConnection?: any): Storage => {
     isLoaded = true;
   };
 
-  const handleMessage = async (event) => {
+  const handleMessage = async (event: any) => {
     const response = event.data;
     const sessionAccessId = getId(response);
 
@@ -62,7 +60,7 @@ export const createGuest = (source, onConnection?: any): Storage => {
     }
   };
 
-  function message(method, key?, value?, callback?) {
+  function message(method: string, key?: string, value?: any, callback?: any) {
     if (closed) {
       openStorage();
     }
@@ -75,11 +73,12 @@ export const createGuest = (source, onConnection?: any): Storage => {
     const id = createId(key || method);
     messagesCount++;
 
-    if (isLoaded) {
+    if (isLoaded && iframe) {
       if (callbacks && typeof callback === 'function') {
         callbacks[id] = callback;
       }
-      iframe.contentWindow.postMessage(
+
+      iframe.contentWindow?.postMessage(
         {
           method,
           key,
@@ -126,12 +125,12 @@ export const createGuest = (source, onConnection?: any): Storage => {
   const close = () => {
     clearTimeout(connectedTimeout);
     window.removeEventListener('message', handleMessage);
-    iframe.parentNode.removeChild(iframe);
+    iframe.parentNode?.removeChild(iframe);
     connected = false;
     closed = true;
   };
 
-  const get = (key: string, callback) => {
+  const get = (key: string, callback: any) => {
     const innerCallback = async (error: any, data: any) => {
       if (data) {
         storage.setItem(key, data);
@@ -146,14 +145,14 @@ export const createGuest = (source, onConnection?: any): Storage => {
     return storage.getItem(key);
   };
 
-  const set = (key: string, value: string, callback) => {
+  const set = (key: string, value: string, callback: any) => {
     if (callback) {
       message('set', key, value, callback);
     }
     return storage.setItem(key, value);
   };
 
-  const remove = (key: string, callback) => {
+  const remove = (key: string, callback: any) => {
     if (callback) {
       message('remove', key, null, callback);
     }

@@ -13,8 +13,12 @@ const useStorage = (
 
   const isBrowser: boolean = ((): boolean => typeof window !== 'undefined')();
 
-  const getItem = (key: string, type: StorageType = defaultType): string => {
+  const getItem: (key: string, type?: StorageType) => string = (
+    key: string,
+    type: StorageType = defaultType
+  ): string => {
     window.localStorage;
+    // @ts-ignore
     return isBrowser ? window[storageType(type)].getItem(key) : null;
   };
 
@@ -24,6 +28,7 @@ const useStorage = (
     type: StorageType = defaultType
   ): boolean => {
     if (isBrowser) {
+      // @ts-ignore
       window[storageType(type)].setItem(key, value);
       return true;
     }
@@ -31,6 +36,7 @@ const useStorage = (
   };
 
   const removeItem = (key: string, type: StorageType = defaultType): void => {
+    // @ts-ignore
     window[storageType(type)].removeItem(key);
   };
 

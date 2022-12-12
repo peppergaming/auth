@@ -8,12 +8,12 @@ import {
 
 import { createGuest } from './guest';
 import { AllowedDomain, createHost } from './host';
-import { Storage } from './utils';
+import { getDefaultStorage, Storage } from './utils';
 
 export { createHost, createGuest };
 
-let host: Storage = null;
-let guest: Storage = null;
+let host: Storage | null = null;
+let guest: Storage | null = null;
 
 const ALLOWED_DOMAINS: AllowedDomain[] = [
   {
@@ -35,7 +35,13 @@ const initializeGuest = (onConnection?: any): Storage => {
   return guest;
 };
 
-export const initializeSharedStorage = (onConnection?: any) => {
+export const initializeSharedStorage = (
+  onConnection?: any,
+  isolated = true
+) => {
+  if (isolated) {
+    return getDefaultStorage();
+  }
   if (
     [PEPPER_APP_DEV_URL, PEPPER_APP_PROD_URL].some((url) =>
       window.location.href.includes(url)

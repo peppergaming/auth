@@ -235,12 +235,17 @@ export class PepperLogin {
 
   constructor(options?: Partial<PepperLoginOptions>) {
     this.deepHydration = this.deepHydration.bind(this);
-    this.storage = initializeSharedStorage(this.deepHydration);
 
     this.options = defaultPepperLoginOptions;
     if (options) {
       this.options = { ...defaultPepperLoginOptions, ...options };
     }
+    const willDeepHydrate =
+      !!this.options.deepHydration && deepHydrationAvailable();
+    this.storage = initializeSharedStorage(
+      this.deepHydration,
+      !willDeepHydrate
+    );
     setLoggerLevel(this.options.logLevel || DEFAULT_LEVEL);
 
     if (options && options.eventSubscriber) {
