@@ -36,11 +36,11 @@ export const LOGIN_STATUS = {
 
 export type LOGIN_STATUS_TYPE = typeof LOGIN_STATUS[keyof typeof LOGIN_STATUS];
 
-export const PEPPER_API_DEV_URL = 'https://dev-nm.e2bs.ch/api';
+export const PEPPER_API_DEV_URL = 'https://dev-backend.pepper.zone/api';
 export const PEPPER_API_PROD_URL = 'https://api-pepper.zone/api';
 
-export const PEPPER_APP_DEV_URL = 'https://dev-app.e2bs.ch';
-export const PEPPER_APP_PROD_URL = 'https://app.peppergaming.com';
+export const PEPPER_APP_DEV_URL = 'https://dev-app.pepper.zone';
+export const PEPPER_APP_PROD_URL = 'https://app.pepperwallet.xyz';
 
 export const PEPPER_APP_OAUTH_PATH = 'oauth';
 
