@@ -51,7 +51,7 @@ import {
   WalletConnectAdapter,
 } from './adapters';
 
-export { ChainConfig };
+export type { ChainConfig };
 const web3authClientId = IS_DEV ? WEB3AUTH_CLIENT_ID_DEV : WEB3AUTH_CLIENT_ID;
 
 /**
@@ -102,7 +102,7 @@ export interface EventSubscriber {
     userInfo: UserInfo,
     provider: Provider,
     signer: PepperWallet,
-    pepperAccessToken?: string
+    pepperAccessToken?: string | null
   ) => Promise<void>;
 
   /**
@@ -123,7 +123,7 @@ export interface EventSubscriber {
   /**
    * A function that is called when the sdk has connection issues.
    */
-  onErrored?: (error) => Promise<void>;
+  onErrored?: (error: any) => Promise<void>;
 }
 
 //  TODO document this
@@ -133,6 +133,7 @@ export interface PepperLoginOptions {
   logLevel?: LogLevel;
   isMobile?: boolean;
   isDevelopment?: boolean;
+  remoteAuthentication?: boolean;
   eventSubscriber?: EventSubscriber;
   deepHydration?: boolean;
   deepHydrationTimeout?: number;
@@ -183,6 +184,7 @@ const defaultPepperLoginOptions: PepperLoginOptions = {
   logLevel: DEFAULT_LEVEL,
   isMobile: false,
   isDevelopment: false,
+  remoteAuthentication: false,
   deepHydration: false,
   deepHydrationTimeout: 5000,
 };
@@ -224,7 +226,7 @@ export class PepperLogin {
   private openloginAdapter: OpenloginAdapter | null;
   private metamaskAdapter?: MetaMaskAdapter;
   private walletConnectAdapter?: WalletConnectAdapter;
-  private storage: Storage = null;
+  private storage: Storage | null = null;
   private pepperApi: PepperApi;
   private subscriber?: EventSubscriber = defaultEventSubscriber;
   private currentStatus: LOGIN_STATUS_TYPE = LOGIN_STATUS.NOT_READY;
@@ -692,23 +694,9 @@ export class PepperLogin {
     this.pepperApi.setAccessToken(accessToken);
     this.currentStatus = LOGIN_STATUS.PEPPER_CONNECTED;
     this.loginToken = null;
-    if (!this.#provider) {
-      const chainConfig = this.options.chainConfig;
-      this.#provider = new JsonRpcProvider(chainConfig.rpcTarget || '', {
-        chainId: parseInt(chainConfig.chainId || '1'),
-        name: chainConfig.name || 'default',
-      });
-    }
 
-    if (this.subscriber) {
-      await this.subscriber.onConnected(
-        this._userInfo,
-        this.#provider,
-        this.#signer,
-        accessToken
-      );
-    }
     logger.info('Logged with Pepper');
+    return accessToken;
   }
 
   private async hydrateSession() {
@@ -751,15 +739,35 @@ export class PepperLogin {
     this._userInfo.publicAddress = this.#signer.address;
     this._userInfo.publicKey = this.#signer.publicKey;
     // logger.debug("Current wallet: ", this.#signer);
+    let accessToken = null;
+    if (this.options.remoteAuthentication) {
+      const pepperAccessToken = this.storage?.get(PEPPER_ACCESS_TOKEN_KEY);
+      // logger.debug("pepperAccessToken: ", pepperAccessToken);
 
-    const pepperAccessToken = this.storage.get(PEPPER_ACCESS_TOKEN_KEY);
-    // logger.debug("pepperAccessToken: ", pepperAccessToken);
-
-    if (pepperAccessToken && !this.loginToken) {
-      await this.hydratePepper(pepperAccessToken);
-    } else {
-      await this.pepperLogin();
+      if (pepperAccessToken && !this.loginToken) {
+        accessToken = await this.hydratePepper(pepperAccessToken);
+      } else {
+        accessToken = await this.pepperLogin();
+      }
     }
+
+    if (!this.#provider) {
+      const chainConfig = this.options.chainConfig;
+      this.#provider = new JsonRpcProvider(chainConfig.rpcTarget || '', {
+        chainId: parseInt(chainConfig.chainId || '1'),
+        name: chainConfig.name || 'default',
+      });
+    }
+
+    if (this.subscriber) {
+      await this.subscriber.onConnected(
+        this._userInfo,
+        this.#provider,
+        this.#signer,
+        accessToken
+      );
+    }
+
     return this.#provider;
   }
 
@@ -809,7 +817,7 @@ export class PepperLogin {
 
         if (verifyResponse && verifyResponse['access_token']) {
           const accessToken = verifyResponse['access_token'];
-          await this.hydratePepper(accessToken);
+          return await this.hydratePepper(accessToken);
         }
       }
     } catch (e) {
@@ -817,6 +825,7 @@ export class PepperLogin {
       await this.subscriber?.onErrored(e);
       this.currentStatus = LOGIN_STATUS.READY;
     }
+    return null;
   }
 
   public async refreshPepperLogin(loginToken?: string) {
