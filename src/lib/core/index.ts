@@ -1,6 +1,5 @@
-/* eslint-disable */
-/* tslint:disable */
-// @ts-nocheck
+/* eslint-disable @typescript-eslint/no-empty-function, @typescript-eslint/no-explicit-any */
+
 import { Provider, Web3Provider } from '@ethersproject/providers';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { CONNECTED_EVENT_DATA } from '@web3auth/base';
@@ -45,7 +44,12 @@ import {
   initializeSharedStorage,
 } from '../utils/storage';
 import { Storage } from '../utils/storage/utils';
-import { ExternalWallet, InternalWallet, PepperWallet } from '../wallet';
+import {
+  ExternalEvmWallet,
+  InternalEvmWallet,
+  InternalSolanaWallet,
+  PepperWallet,
+} from '../wallet';
 
 import {
   MetaMaskAdapter,
@@ -58,6 +62,7 @@ export type { ChainConfig };
 const web3authClientId = IS_DEV ? WEB3AUTH_CLIENT_ID_DEV : WEB3AUTH_CLIENT_ID;
 const defaultEvmChainId = IS_DEV ? '0x5' : '0x1';
 const defaultSolanaChainId = IS_DEV ? '0x2' : '0x1';
+
 /**
  * Example of usage
  *
@@ -133,7 +138,7 @@ export interface EventSubscriber {
 //  TODO document this
 export interface PepperLoginOptions {
   chainConfig?: ChainConfig;
-  chainType?: typeof CHAIN_NAMESPACES[keyof typeof CHAIN_NAMESPACES];
+  chainType?: typeof CHAIN_TYPE[keyof typeof CHAIN_TYPE];
   clientId?: string;
   logLevel?: LogLevel;
   isMobile?: boolean;
@@ -231,6 +236,10 @@ const defaultUserInfo: UserInfo = {
  */
 export class PepperLogin {
   readonly options: PepperLoginOptions;
+
+  readonly chainType: typeof CHAIN_TYPE[keyof typeof CHAIN_TYPE] =
+    CHAIN_TYPE.EVM;
+
   private web3Auth: Web3AuthCore | any;
   private loginToken?: string;
 
@@ -261,6 +270,7 @@ export class PepperLogin {
       }
       this.options = { ...this.options, ...options };
     }
+    this.chainType = this.options.chainType;
     const willDeepHydrate =
       !!this.options.deepHydration && deepHydrationAvailable();
     this.storage = initializeSharedStorage(
@@ -623,7 +633,7 @@ export class PepperLogin {
     this.#provider = provider;
     const signer = provider.getSigner();
     const address = await signer.getAddress();
-    this.#signer = new ExternalWallet(signer);
+    this.#signer = new ExternalEvmWallet(signer);
     this.#signer.address = address;
     this._userInfo = {
       ...defaultUserInfo,
@@ -747,11 +757,18 @@ export class PepperLogin {
 
     // logger.debug('Current user info: ', this._userInfo);
     // logger.debug('Web3auth  user info: ', _userInfo);
-
-    this.#signer = new InternalWallet(
-      this.openloginAdapter,
-      this.options.chainConfig || defaultEvmChainConfig
-    );
+    if (this.chainType == CHAIN_TYPE.EVM) {
+      this.#signer = new InternalEvmWallet(
+        this.openloginAdapter,
+        this.options.chainConfig || defaultEvmChainConfig
+      );
+    } else {
+      this.#signer = new InternalSolanaWallet(
+        this.openloginAdapter,
+        this.options.chainConfig || defaultEvmChainConfig
+      );
+    }
+    console.debug('Provider: ', this.#signer?.provider);
 
     this.#provider = this.#signer.provider || null;
 
