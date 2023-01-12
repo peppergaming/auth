@@ -1,5 +1,6 @@
-/* eslint-disable @typescript-eslint/no-empty-function, @typescript-eslint/no-explicit-any */
-
+/* eslint-disable */
+/* tslint:disable */
+// @ts-nocheck
 import { Provider, Web3Provider } from '@ethersproject/providers';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { CONNECTED_EVENT_DATA } from '@web3auth/base';
@@ -14,6 +15,8 @@ import {
   CHAIN_NAMESPACES,
   CHAIN_TYPE,
   ChainConfig,
+  DEFAULT_EVM_RPC,
+  DEFAULT_SOLANA_RPC,
   IS_DEV,
   LOGIN_PROVIDER,
   LOGIN_PROVIDER_TYPE,
@@ -53,7 +56,8 @@ import {
 
 export type { ChainConfig };
 const web3authClientId = IS_DEV ? WEB3AUTH_CLIENT_ID_DEV : WEB3AUTH_CLIENT_ID;
-
+const defaultEvmChainId = IS_DEV ? '0x5' : '0x1';
+const defaultSolanaChainId = IS_DEV ? '0x2' : '0x1';
 /**
  * Example of usage
  *
@@ -62,23 +66,23 @@ const web3authClientId = IS_DEV ? WEB3AUTH_CLIENT_ID_DEV : WEB3AUTH_CLIENT_ID;
 
  *       async onConnecting() {
  *          // put here your logic during connection
- *          console.log('Connecting');
+ *          console.log("Connecting");
  *       },
  *       async onAuthChallengeSigning() {
  *          // put here your logic during signing challenge
- *          console.log('Signing Challenge');
+ *          console.log("Signing Challenge");
  *       },
  *       async onConnected(userInfo: UserInfo, provider: Provider, signer: PepperWallet) {
  *          // put here your logic for post connection
- *          console.log('Connected');
+ *          console.log("Connected");
  *       },
  *       async onDisconnected() {
  *          // put here your logic for post disconnection
- *          console.log('Disconnected');
+ *          console.log("Disconnected");
  *       },
  *       async onErrored(error: any) {
  *       // put here your logic for handling errors
- *          console.log('Connection error');
+ *          console.log("Connection error");
  *       },
  *     };
  * ```
@@ -129,6 +133,7 @@ export interface EventSubscriber {
 //  TODO document this
 export interface PepperLoginOptions {
   chainConfig?: ChainConfig;
+  chainType?: typeof CHAIN_NAMESPACES[keyof typeof CHAIN_NAMESPACES];
   clientId?: string;
   logLevel?: LogLevel;
   isMobile?: boolean;
@@ -171,15 +176,25 @@ const defaultEventSubscriber: EventSubscriber = {
   onErrored: async () => {},
 };
 
-const defaultChainConfig = {
+const defaultEvmChainConfig: ChainConfig = {
   chainNamespace: CHAIN_NAMESPACES.EIP155,
   chainType: CHAIN_TYPE.EVM,
-  chainId: '1',
-  name: 'default',
+  chainId: defaultEvmChainId,
+  name: 'defaultEvm',
+  rpcTarget: DEFAULT_EVM_RPC,
+};
+
+const defaultSolanaChainConfig: ChainConfig = {
+  chainNamespace: CHAIN_NAMESPACES.SOLANA,
+  chainType: CHAIN_TYPE.SOLANA,
+  chainId: defaultSolanaChainId,
+  name: 'defaultSolana',
+  rpcTarget: DEFAULT_SOLANA_RPC,
 };
 
 const defaultPepperLoginOptions: PepperLoginOptions = {
-  chainConfig: defaultChainConfig,
+  chainConfig: defaultEvmChainConfig,
+  chainType: CHAIN_NAMESPACES.SOLANA,
   clientId: undefined,
   logLevel: DEFAULT_LEVEL,
   isMobile: false,
@@ -240,7 +255,11 @@ export class PepperLogin {
 
     this.options = defaultPepperLoginOptions;
     if (options) {
-      this.options = { ...defaultPepperLoginOptions, ...options };
+      const chainType = options.chainType;
+      if (chainType && chainType == CHAIN_NAMESPACES.SOLANA) {
+        this.options.chainConfig = defaultSolanaChainConfig;
+      }
+      this.options = { ...this.options, ...options };
     }
     const willDeepHydrate =
       !!this.options.deepHydration && deepHydrationAvailable();
@@ -260,7 +279,7 @@ export class PepperLogin {
 
     if (options && options.chainConfig) {
       this.options.chainConfig = {
-        ...defaultChainConfig,
+        ...defaultEvmChainConfig,
         ...options.chainConfig,
       };
     }
@@ -731,7 +750,7 @@ export class PepperLogin {
 
     this.#signer = new InternalWallet(
       this.openloginAdapter,
-      this.options.chainConfig || defaultChainConfig
+      this.options.chainConfig || defaultEvmChainConfig
     );
 
     this.#provider = this.#signer.provider || null;

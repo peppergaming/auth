@@ -55,18 +55,30 @@ export const PEPPER_METAMASK = 'PEPPER_METAMASK';
 export const PEPPER_WALLETCONNECT = 'PEPPER_WALLETCONNECT';
 
 export const PEPPER_INFURA_ID = '1aa50780835e4452bbb20a6b6eff8c1f';
+export const PEPPER_WALLET_EVM_ALCHEMY_ID = 'LWvlsFYYQsuj97LG_k7HWRrPk1o3NRls';
+export const PEPPER_WALLET_EVM_TEST_ALCHEMY_ID =
+  'c5oXBAtQBi_Q1maiL7LjtA716i1fxx1t';
+export const PEPPER_WALLET_SOLANA_ALCHEMY_ID =
+  'Y5lgdsdm8xO5egV1y9Vsq3g7nVpRDmyF';
+export const PEPPER_WALLET_SOLANA_TEST_ALCHEMY_ID =
+  'QRtNwIN19Oh3TT7L_bhaVSruMqAVeoP6';
+
+export const DEFAULT_EVM_RPC = IS_DEV
+  ? `https://eth-goerli.g.alchemy.com/v2/${PEPPER_WALLET_EVM_TEST_ALCHEMY_ID}`
+  : `https://eth-mainnet.g.alchemy.com/v2/${PEPPER_WALLET_EVM_ALCHEMY_ID}`;
+export const DEFAULT_SOLANA_RPC = IS_DEV
+  ? `https://solana-devnet.g.alchemy.com/v2/${PEPPER_WALLET_SOLANA_TEST_ALCHEMY_ID}`
+  : `https://solana-mainnet.g.alchemy.com/v2/${PEPPER_WALLET_SOLANA_ALCHEMY_ID}`;
 
 export const CHAIN_TYPE = {
   EVM: 'evm',
-  // TODO
-  // SOLANA: "solana",
+  SOLANA: 'solana',
   // OTHER: "other",
 };
 
 export const CHAIN_NAMESPACES = {
   EIP155: 'eip155',
-  // TODO
-  // SOLANA: "solana",
+  SOLANA: 'solana',
   // OTHER: "other",
 };
 

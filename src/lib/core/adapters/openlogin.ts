@@ -3,12 +3,12 @@ import { OpenloginAdapter } from '@web3auth/openlogin-adapter';
 import {
   CHAIN_NAMESPACES,
   ChainConfig,
+  DEFAULT_EVM_RPC,
   IS_DEV,
-  PEPPER_INFURA_ID,
   WEB3AUTH_CLIENT_ID,
   WEB3AUTH_CLIENT_ID_DEV,
 } from '../../config/constants';
-import logger from '../../config/logger';
+// import logger from '../../config/logger';
 
 const web3authClientId = IS_DEV ? WEB3AUTH_CLIENT_ID_DEV : WEB3AUTH_CLIENT_ID;
 
@@ -23,21 +23,21 @@ export const openLoginAdapterBuilder = async (
   chainConfig?: ChainConfig
 ): Promise<OpenloginAdapter> => {
   const network = IS_DEV ? 'testnet' : 'mainnet';
-  const infuraNetwork = IS_DEV ? 'rinkeby' : 'mainnet';
 
   const currentChainConfig = {
-    chainId: chainConfig?.chainId || '1',
-    chainNamespace: chainConfig.chainNamespace || CHAIN_NAMESPACES.EIP155,
-    rpcTarget:
-      chainConfig?.rpcTarget ||
-      `https://${infuraNetwork}.infura.io/v3/${PEPPER_INFURA_ID}`,
+    chainId: chainConfig?.chainId || '0x1',
+    chainNamespace:
+      chainConfig?.chainNamespace ||
+      chainConfig?.chainType ||
+      CHAIN_NAMESPACES.EIP155,
+    rpcTarget: chainConfig?.rpcTarget || DEFAULT_EVM_RPC,
     displayName: chainConfig?.name || 'default',
   };
 
-  logger.debug(
-    'Initializing OpenLogin Adapter with chain config: ',
-    chainConfig
-  );
+  // logger.debug(
+  //   "Initializing OpenLogin Adapter with chain config: ",
+  //   currentChainConfig
+  // );
   return new OpenloginAdapter({
     // @ts-ignore
     chainConfig: currentChainConfig,
