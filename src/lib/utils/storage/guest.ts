@@ -37,8 +37,7 @@ export const createGuest = (source: any, onConnection?: any): Storage => {
     const sessionAccessId = getId(response);
 
     if (sessionAccessId === 'sessionAccessId-connected') {
-      // TODO remove this log
-      console.debug('guest storage connected to: ', source);
+
       if (onConnection) {
         await onConnection();
       }

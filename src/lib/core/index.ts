@@ -692,7 +692,7 @@ export class PepperLogin {
   public async connectToWalletConnect() {
     if (isElectron()) {
       // TODO implement oauth here
-      console.debug('Support for electron not available yet');
+      logger.debug('Support for electron not available yet');
       return null;
     }
 

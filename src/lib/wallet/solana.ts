@@ -52,7 +52,6 @@ export class PepperSolanaWallet implements PepperWallet {
     if (!this.provider) {
       throw new Error('No solana provider available');
     }
-    console.debug(this.provider);
     return this.provider.requestAccounts();
   }
 }
