@@ -295,7 +295,8 @@ export class PepperLogin {
     }
     this.web3Auth = new Web3AuthCore({
       clientId: web3authClientId,
-      chainConfig: { chainNamespace: 'other' },
+      // @ts-ignore
+      chainConfig: this.options.chainConfig,
     });
 
     this._deepHydrationTimedOut = !this.options.deepHydration;
@@ -426,7 +427,8 @@ export class PepperLogin {
       if (forceHydration) {
         this.web3Auth = new Web3AuthCore({
           clientId: web3authClientId,
-          chainConfig: { chainNamespace: 'other' },
+          // @ts-ignore
+          chainConfig: this.options.chainConfig,
         });
       }
       if (forceHydration || !this.openloginAdapter) {
@@ -763,13 +765,8 @@ export class PepperLogin {
         this.options.chainConfig || defaultEvmChainConfig
       );
     } else {
-      this.#signer = new InternalSolanaWallet(
-        this.openloginAdapter,
-        this.options.chainConfig || defaultEvmChainConfig
-      );
+      this.#signer = new InternalSolanaWallet(this.openloginAdapter);
     }
-    console.debug('Provider: ', this.#signer?.provider);
-
     this.#provider = this.#signer.provider || null;
 
     this._userInfo.publicAddress = this.#signer.address;

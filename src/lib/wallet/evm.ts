@@ -54,6 +54,13 @@ export class PepperEvmWallet extends Signer implements PepperWallet {
   async signMessage(message: Bytes | string): Promise<string> {
     return await this.#wallet.signMessage(message);
   }
+
+  public async accounts() {
+    if (!this.provider) {
+      throw new Error('No provider available');
+    }
+    return (this.provider as JsonRpcProvider).listAccounts();
+  }
 }
 
 export class InternalEvmWallet extends PepperEvmWallet {

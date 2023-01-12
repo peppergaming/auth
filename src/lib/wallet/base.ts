@@ -5,4 +5,6 @@ export interface PepperWallet {
   signTransaction: (tx: any) => Promise<any>;
   signMessage: (message: any) => Promise<any>;
   provider?: any;
+
+  accounts: () => Promise<any[]>;
 }
