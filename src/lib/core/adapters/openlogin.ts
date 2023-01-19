@@ -8,7 +8,6 @@ import {
   WEB3AUTH_CLIENT_ID,
   WEB3AUTH_CLIENT_ID_DEV,
 } from '../../config/constants';
-// import logger from '../../config/logger';
 
 const web3authClientId = IS_DEV ? WEB3AUTH_CLIENT_ID_DEV : WEB3AUTH_CLIENT_ID;
 
@@ -34,10 +33,6 @@ export const openLoginAdapterBuilder = async (
     displayName: chainConfig?.name || 'default',
   };
 
-  // logger.debug(
-  //   "Initializing OpenLogin Adapter with chain config: ",
-  //   currentChainConfig
-  // );
   return new OpenloginAdapter({
     // @ts-ignore
     chainConfig: currentChainConfig,

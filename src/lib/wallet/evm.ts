@@ -1,3 +1,4 @@
+// eslint-disable @typescript-eslint/no-unused-vars
 import { Provider, TransactionRequest } from '@ethersproject/abstract-provider';
 import { Bytes } from '@ethersproject/bytes';
 import { defineReadOnly } from '@ethersproject/properties';
@@ -60,6 +61,28 @@ export class PepperEvmWallet extends Signer implements PepperWallet {
       throw new Error('No provider available');
     }
     return (this.provider as JsonRpcProvider).listAccounts();
+  }
+  public async balance() {
+    return (this.provider as JsonRpcProvider).getBalance(this.address);
+  }
+
+  public async prepareSendNftTransaction(): // tokenAddress: string,
+  // recipient: string,
+  // id: string | undefined
+  Promise<any> {
+    // TODO
+    return Promise.resolve(undefined);
+  }
+
+  public async prepareSendTransaction(): // amount: number,
+  // recipient: string
+  Promise<any> {
+    // TODO
+    return Promise.resolve(undefined);
+  }
+
+  public async signAndSendTransaction(tx: any): Promise<any> {
+    return await this.sendTransaction(tx);
   }
 }
 

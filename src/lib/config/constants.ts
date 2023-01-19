@@ -135,3 +135,6 @@ export interface ChainConfig {
   name?: string;
   rpcTarget?: string;
 }
+
+export const LAMPORTS_TO_SOLANA = 0.000000001;
+export const SOLANA_TO_LAMPORTS = 1000000000;

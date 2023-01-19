@@ -1,21 +1,53 @@
-import { Keypair, PublicKey, Transaction } from '@solana/web3.js';
+import {
+  Connection,
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+} from '@solana/web3.js';
 import { getED25519Key } from '@toruslabs/openlogin-ed25519';
 import { OpenloginAdapter } from '@web3auth/openlogin-adapter';
 import { SolanaWallet } from '@web3auth/solana-provider';
 
+import {
+  CHAIN_NAMESPACES,
+  CHAIN_TYPE,
+  ChainConfig,
+  DEFAULT_SOLANA_RPC,
+  IS_DEV,
+  LAMPORTS_TO_SOLANA,
+  SOLANA_TO_LAMPORTS,
+} from '../config/constants';
+
 import { PepperWallet } from './base';
+
+const defaultSolanaChainId = IS_DEV ? '0x3' : '0x1';
+const defaultSolanaChainConfig: ChainConfig = {
+  chainNamespace: CHAIN_NAMESPACES.SOLANA,
+  chainType: CHAIN_TYPE.SOLANA,
+  chainId: defaultSolanaChainId,
+  name: 'defaultSolana',
+  rpcTarget: DEFAULT_SOLANA_RPC,
+};
 
 export class PepperSolanaWallet implements PepperWallet {
   private _publicKey: PublicKey;
-  private _provider?: SolanaWallet;
-  // @ts-ignore
-  readonly #secretKey: Uint8Array;
+  private _provider: any;
+  readonly #signer?: SolanaWallet;
+  // readonly #secretKey: Uint8Array;
 
-  constructor(privKey: string, provider?: any) {
+  constructor(
+    privKey: string,
+    signer?: SolanaWallet,
+    chainConfig = defaultSolanaChainConfig
+  ) {
     const keypair = Keypair.fromSecretKey(Buffer.from(privKey, 'hex'));
     this._publicKey = keypair.publicKey;
-    this.#secretKey = keypair.secretKey;
-    this._provider = provider;
+    // this.#secretKey = keypair.secretKey;
+    this.#signer = signer;
+    this._provider = new Connection(
+      chainConfig.rpcTarget || DEFAULT_SOLANA_RPC
+    );
   }
 
   get publicKey() {
@@ -27,21 +59,21 @@ export class PepperSolanaWallet implements PepperWallet {
   }
 
   public async signTransaction(transaction: Transaction): Promise<Transaction> {
-    if (!this.provider) {
+    if (!this.#signer) {
       throw new Error('No solana provider available');
     }
-    return this.provider.signTransaction(transaction);
+    return await this.#signer.signTransaction(transaction);
   }
 
   public async signMessage(message: string | Uint8Array): Promise<Uint8Array> {
-    if (!this.provider) {
+    if (!this.#signer) {
       throw new Error('No solana provider available');
     }
     if (typeof message === 'string') {
       message = Buffer.from(message, 'utf8');
     }
 
-    return this.provider.signMessage(message);
+    return await this.#signer.signMessage(message);
   }
 
   get provider() {
@@ -49,15 +81,52 @@ export class PepperSolanaWallet implements PepperWallet {
   }
 
   public async accounts() {
-    if (!this.provider) {
+    if (!this.#signer) {
       throw new Error('No solana provider available');
     }
-    return this.provider.requestAccounts();
+    return (await this.#signer?.requestAccounts()) || [];
+  }
+
+  public async balance() {
+    const balance = await this.provider.getBalance(new PublicKey(this.address));
+    return balance * LAMPORTS_TO_SOLANA;
+  }
+
+  public async prepareSendNftTransaction(): // tokenAddress: string,
+  // recipientAddress: string,
+  // id: string | undefined
+  Promise<any> {
+    return Promise.resolve(undefined);
+  }
+
+  public async prepareSendTransaction(
+    amount: number,
+    recipientAddress: string
+  ): Promise<any> {
+    const block = await this.provider.getLatestBlockhash('finalized');
+
+    const fromAddress = new PublicKey(this.address);
+    const toAddress = new PublicKey(recipientAddress);
+    const TransactionInstruction = SystemProgram.transfer({
+      fromPubkey: fromAddress,
+      toPubkey: toAddress,
+      lamports: amount * SOLANA_TO_LAMPORTS,
+    });
+
+    return new Transaction({
+      blockhash: block.blockhash,
+      lastValidBlockHeight: block.lastValidBlockHeight,
+      feePayer: fromAddress,
+    }).add(TransactionInstruction);
+  }
+
+  public async signAndSendTransaction(tx: any): Promise<any> {
+    return this.#signer?.signAndSendTransaction(tx);
   }
 }
 
 export class InternalSolanaWallet extends PepperSolanaWallet {
-  constructor(adapter: OpenloginAdapter) {
+  constructor(adapter: OpenloginAdapter, chainConfig: ChainConfig) {
     if (!adapter.openloginInstance) {
       throw new Error('Adapter must be initialized with a correct private key');
     }
@@ -68,6 +137,6 @@ export class InternalSolanaWallet extends PepperSolanaWallet {
       ? new SolanaWallet(adapter.provider)
       : undefined;
 
-    super(hexPrivKey, provider);
+    super(hexPrivKey, provider, chainConfig);
   }
 }

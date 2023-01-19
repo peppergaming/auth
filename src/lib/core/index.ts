@@ -61,7 +61,7 @@ import {
 export type { ChainConfig };
 const web3authClientId = IS_DEV ? WEB3AUTH_CLIENT_ID_DEV : WEB3AUTH_CLIENT_ID;
 const defaultEvmChainId = IS_DEV ? '0x5' : '0x1';
-const defaultSolanaChainId = IS_DEV ? '0x2' : '0x1';
+const defaultSolanaChainId = IS_DEV ? '0x3' : '0x1';
 
 /**
  * Example of usage
@@ -692,7 +692,7 @@ export class PepperLogin {
   public async connectToWalletConnect() {
     if (isElectron()) {
       // TODO implement oauth here
-      logger.debug('Support for electron not available yet');
+      console.debug('Support for electron not available yet');
       return null;
     }
 
@@ -765,7 +765,10 @@ export class PepperLogin {
         this.options.chainConfig || defaultEvmChainConfig
       );
     } else {
-      this.#signer = new InternalSolanaWallet(this.openloginAdapter);
+      this.#signer = new InternalSolanaWallet(
+        this.openloginAdapter,
+        this.options.chainConfig || defaultSolanaChainConfig
+      );
     }
     this.#provider = this.#signer.provider || null;
 
