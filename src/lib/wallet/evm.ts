@@ -1,4 +1,3 @@
-// eslint-disable @typescript-eslint/no-unused-vars
 import { Provider, TransactionRequest } from '@ethersproject/abstract-provider';
 import { Bytes } from '@ethersproject/bytes';
 import { defineReadOnly } from '@ethersproject/properties';
@@ -21,6 +20,7 @@ export class PepperEvmWallet extends Signer implements PepperWallet {
     this.#wallet = wallet;
     this._address = address;
     this._publicKey = publicKey;
+    // @ts-ignore
     defineReadOnly(this, 'provider', this.#wallet.provider || null);
   }
 
@@ -62,6 +62,7 @@ export class PepperEvmWallet extends Signer implements PepperWallet {
     }
     return (this.provider as JsonRpcProvider).listAccounts();
   }
+
   public async balance() {
     return (this.provider as JsonRpcProvider).getBalance(this.address);
   }
@@ -81,8 +82,11 @@ export class PepperEvmWallet extends Signer implements PepperWallet {
     return Promise.resolve(undefined);
   }
 
-  public async signAndSendTransaction(tx: any): Promise<any> {
-    return await this.sendTransaction(tx);
+  public async signAndSendTransaction(
+    tx: any
+  ): Promise<{ signature: string | null }> {
+    const transactionResponse = await this.sendTransaction(tx);
+    return { signature: transactionResponse?.hash || null };
   }
 }
 

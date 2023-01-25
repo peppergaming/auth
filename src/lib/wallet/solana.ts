@@ -120,8 +120,11 @@ export class PepperSolanaWallet implements PepperWallet {
     }).add(TransactionInstruction);
   }
 
-  public async signAndSendTransaction(tx: any): Promise<any> {
-    return this.#signer?.signAndSendTransaction(tx);
+  public async signAndSendTransaction(
+    tx: any
+  ): Promise<{ signature: string | null }> {
+    const transactionResponse = await this.#signer?.signAndSendTransaction(tx);
+    return { signature: transactionResponse?.signature || null };
   }
 }
 

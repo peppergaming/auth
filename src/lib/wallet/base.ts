@@ -4,7 +4,8 @@ export interface PepperWallet {
 
   prepareSendTransaction: (
     amount: number,
-    recipientAddress: string
+    recipientAddress: string,
+    tokenOptions?: any
   ) => Promise<any>;
   prepareSendNftTransaction: (
     tokenAddress: string,
@@ -13,7 +14,7 @@ export interface PepperWallet {
   ) => Promise<any>;
   signTransaction: (tx: any) => Promise<any>;
   signMessage: (message: any) => Promise<any>;
-  signAndSendTransaction: (tx: any) => Promise<any>;
+  signAndSendTransaction: (tx: any) => Promise<{ signature: string | null }>;
   provider?: any;
 
   accounts: () => Promise<any[]>;
