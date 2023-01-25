@@ -1,4 +1,13 @@
 import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountInstruction,
+  createTransferCheckedInstruction,
+  getAccount,
+  TOKEN_PROGRAM_ID,
+  TokenAccountNotFoundError,
+  TokenInvalidAccountOwnerError,
+} from '@solana/spl-token';
+import {
   Connection,
   Keypair,
   PublicKey,
@@ -101,23 +110,79 @@ export class PepperSolanaWallet implements PepperWallet {
 
   public async prepareSendTransaction(
     amount: number,
-    recipientAddress: string
+    recipientAddress: string,
+    tokenOptions?: {
+      tokenAddress: string;
+      tokenAccountAddress: string;
+      recipientTokenAddress: string;
+    }
   ): Promise<any> {
     const block = await this.provider.getLatestBlockhash('finalized');
 
     const fromAddress = new PublicKey(this.address);
     const toAddress = new PublicKey(recipientAddress);
-    const TransactionInstruction = SystemProgram.transfer({
-      fromPubkey: fromAddress,
-      toPubkey: toAddress,
-      lamports: amount * SOLANA_TO_LAMPORTS,
-    });
 
-    return new Transaction({
+    let transaction = new Transaction({
       blockhash: block.blockhash,
       lastValidBlockHeight: block.lastValidBlockHeight,
       feePayer: fromAddress,
-    }).add(TransactionInstruction);
+    });
+    // let transaction = new Transaction();
+
+    let transferInstruction = null;
+    if (
+      tokenOptions &&
+      tokenOptions.tokenAddress &&
+      tokenOptions.tokenAccountAddress
+    ) {
+      const tokenProgramAddress = new PublicKey(tokenOptions.tokenAddress);
+      const tokenAccountAddress = new PublicKey(
+        tokenOptions.tokenAccountAddress
+      );
+      const recipientTokenAccountAddress = new PublicKey(
+        tokenOptions.recipientTokenAddress
+      );
+
+      try {
+        await getAccount(this.provider, recipientTokenAccountAddress);
+      } catch (error: unknown) {
+        if (
+          error instanceof TokenAccountNotFoundError ||
+          error instanceof TokenInvalidAccountOwnerError
+        ) {
+          const createAccountInstruction =
+            createAssociatedTokenAccountInstruction(
+              fromAddress,
+              recipientTokenAccountAddress,
+              toAddress,
+              tokenProgramAddress,
+              TOKEN_PROGRAM_ID,
+              ASSOCIATED_TOKEN_PROGRAM_ID
+            );
+          transaction = transaction.add(createAccountInstruction);
+        } else {
+          throw error;
+        }
+      }
+
+      transferInstruction = createTransferCheckedInstruction(
+        tokenAccountAddress, // from (should be a token account)
+        tokenProgramAddress, // mint
+        recipientTokenAccountAddress, // to (should be a token account)
+        fromAddress, // from's owner
+        amount * 1e6, // amount, if your deciamls is 8, send 10^8 for 1 token
+        6 // decimals
+      );
+    } else {
+      transferInstruction = SystemProgram.transfer({
+        fromPubkey: fromAddress,
+        toPubkey: toAddress,
+        lamports: amount * SOLANA_TO_LAMPORTS,
+      });
+    }
+
+    transaction = transaction.add(transferInstruction);
+    return transaction;
   }
 
   public async signAndSendTransaction(
