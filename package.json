@@ -55,11 +55,12 @@
   "dependencies": {
     "@metamask/onboarding": "^1.0.1",
     "@metamask/providers": "^10.2.1",
+    "@solana/spl-token": "^0.3.7",
     "@solana/web3.js": "^1.73.0",
     "@walletconnect/client": "^1.8.0",
     "@walletconnect/qrcode-modal": "^1.8.0",
     "@walletconnect/web3-provider": "^1.8.0",
-    "@web3auth/core": "^4.0.0-alpha.0",
+    "@web3auth/core": "^4.2.2",
     "@web3auth/openlogin-adapter": "^4.0.0-alpha.0",
     "@web3auth/solana-provider": "^4.2.2",
     "ethers": "^5.7.2",
