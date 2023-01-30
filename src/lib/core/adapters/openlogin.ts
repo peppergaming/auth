@@ -3,7 +3,7 @@ import { OpenloginAdapter } from '@web3auth/openlogin-adapter';
 import {
   CHAIN_NAMESPACES,
   ChainConfig,
-  DEFAULT_EVM_RPC,
+  EVM_DEFAULT_RPC,
   IS_DEV,
   WEB3AUTH_CLIENT_ID,
   WEB3AUTH_CLIENT_ID_DEV,
@@ -29,7 +29,7 @@ export const openLoginAdapterBuilder = async (
       chainConfig?.chainNamespace ||
       chainConfig?.chainType ||
       CHAIN_NAMESPACES.EIP155,
-    rpcTarget: chainConfig?.rpcTarget || DEFAULT_EVM_RPC,
+    rpcTarget: chainConfig?.rpcTarget || EVM_DEFAULT_RPC,
     displayName: chainConfig?.name || 'default',
   };
 

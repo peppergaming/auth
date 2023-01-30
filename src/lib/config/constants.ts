@@ -60,16 +60,20 @@ export const PEPPER_WALLET_EVM_TEST_ALCHEMY_ID =
   'c5oXBAtQBi_Q1maiL7LjtA716i1fxx1t';
 export const PEPPER_WALLET_SOLANA_ALCHEMY_ID =
   'Y5lgdsdm8xO5egV1y9Vsq3g7nVpRDmyF';
-export const PEPPER_WALLET_SOLANA_TEST_ALCHEMY_ID =
+export const PEPPER_WALLET_SOLANA_DEV_ALCHEMY_ID =
   'QRtNwIN19Oh3TT7L_bhaVSruMqAVeoP6';
 
-export const DEFAULT_EVM_RPC = IS_DEV
+export const EVM_DEFAULT_RPC = IS_DEV
   ? `https://eth-goerli.g.alchemy.com/v2/${PEPPER_WALLET_EVM_TEST_ALCHEMY_ID}`
   : `https://eth-mainnet.g.alchemy.com/v2/${PEPPER_WALLET_EVM_ALCHEMY_ID}`;
-export const DEFAULT_SOLANA_RPC = IS_DEV
-  ? `https://solana-devnet.g.alchemy.com/v2/${PEPPER_WALLET_SOLANA_TEST_ALCHEMY_ID}`
-  : `https://solana-mainnet.g.alchemy.com/v2/${PEPPER_WALLET_SOLANA_ALCHEMY_ID}`;
+export const EVM_MAINNET_RPC = `https://eth-mainnet.g.alchemy.com/v2/${PEPPER_WALLET_EVM_ALCHEMY_ID}`;
+export const EVM_TESTNET_RPC = `https://eth-goerli.g.alchemy.com/v2/${PEPPER_WALLET_EVM_TEST_ALCHEMY_ID}`;
 
+export const SOLANA_DEFAULT_RPC = IS_DEV
+  ? `https://solana-devnet.g.alchemy.com/v2/${PEPPER_WALLET_SOLANA_DEV_ALCHEMY_ID}`
+  : `https://solana-mainnet.g.alchemy.com/v2/${PEPPER_WALLET_SOLANA_ALCHEMY_ID}`;
+export const SOLANA_MAINNET_RPC = `https://solana-mainnet.g.alchemy.com/v2/${PEPPER_WALLET_SOLANA_ALCHEMY_ID}`;
+export const SOLANA_DEVNET_RPC = `https://solana-devnet.g.alchemy.com/v2/${PEPPER_WALLET_SOLANA_DEV_ALCHEMY_ID}`;
 export const CHAIN_TYPE = {
   EVM: 'evm',
   SOLANA: 'solana',

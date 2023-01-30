@@ -22,9 +22,9 @@ import {
   CHAIN_NAMESPACES,
   CHAIN_TYPE,
   ChainConfig,
-  DEFAULT_SOLANA_RPC,
   IS_DEV,
   LAMPORTS_TO_SOLANA,
+  SOLANA_DEFAULT_RPC,
   SOLANA_TO_LAMPORTS,
 } from '../config/constants';
 
@@ -36,7 +36,7 @@ const defaultSolanaChainConfig: ChainConfig = {
   chainType: CHAIN_TYPE.SOLANA,
   chainId: defaultSolanaChainId,
   name: 'defaultSolana',
-  rpcTarget: DEFAULT_SOLANA_RPC,
+  rpcTarget: SOLANA_DEFAULT_RPC,
 };
 
 export class PepperSolanaWallet implements PepperWallet {
@@ -55,7 +55,7 @@ export class PepperSolanaWallet implements PepperWallet {
     // this.#secretKey = keypair.secretKey;
     this.#signer = signer;
     this._provider = new Connection(
-      chainConfig.rpcTarget || DEFAULT_SOLANA_RPC
+      chainConfig.rpcTarget || SOLANA_DEFAULT_RPC
     );
   }
 

@@ -14,8 +14,7 @@ import {
   CHAIN_NAMESPACES,
   CHAIN_TYPE,
   ChainConfig,
-  DEFAULT_EVM_RPC,
-  DEFAULT_SOLANA_RPC,
+  EVM_DEFAULT_RPC,
   IS_DEV,
   LOGIN_PROVIDER,
   LOGIN_PROVIDER_TYPE,
@@ -27,6 +26,7 @@ import {
   PEPPER_METAMASK,
   PEPPER_WALLETCONNECT,
   PERSONAL_SIGN_PREFIX,
+  SOLANA_DEFAULT_RPC,
   WALLET_CONNECT_KEY,
   WEB3AUTH_CACHED_ADAPTER_KEY,
   WEB3AUTH_CLIENT_ID,
@@ -186,7 +186,7 @@ const defaultEvmChainConfig: ChainConfig = {
   chainType: CHAIN_TYPE.EVM,
   chainId: defaultEvmChainId,
   name: 'defaultEvm',
-  rpcTarget: DEFAULT_EVM_RPC,
+  rpcTarget: EVM_DEFAULT_RPC,
 };
 
 const defaultSolanaChainConfig: ChainConfig = {
@@ -194,7 +194,7 @@ const defaultSolanaChainConfig: ChainConfig = {
   chainType: CHAIN_TYPE.SOLANA,
   chainId: defaultSolanaChainId,
   name: 'defaultSolana',
-  rpcTarget: DEFAULT_SOLANA_RPC,
+  rpcTarget: SOLANA_DEFAULT_RPC,
 };
 
 const defaultPepperLoginOptions: PepperLoginOptions = {
@@ -270,6 +270,7 @@ export class PepperLogin {
       }
       this.options = { ...this.options, ...options };
     }
+
     this.chainType = this.options.chainType;
     const willDeepHydrate =
       !!this.options.deepHydration && deepHydrationAvailable();
@@ -287,12 +288,6 @@ export class PepperLogin {
     }
     this.subscriber = this.options.eventSubscriber || defaultEventSubscriber;
 
-    if (options && options.chainConfig) {
-      this.options.chainConfig = {
-        ...defaultEvmChainConfig,
-        ...options.chainConfig,
-      };
-    }
     this.web3Auth = new Web3AuthCore({
       clientId: web3authClientId,
       // @ts-ignore
