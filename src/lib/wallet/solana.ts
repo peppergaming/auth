@@ -1,9 +1,8 @@
 import {
-  ASSOCIATED_TOKEN_PROGRAM_ID,
   createAssociatedTokenAccountInstruction,
   createTransferCheckedInstruction,
   getAccount,
-  TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddress,
   TokenAccountNotFoundError,
   TokenInvalidAccountOwnerError,
 } from '@solana/spl-token';
@@ -43,7 +42,6 @@ export class PepperSolanaWallet implements PepperWallet {
   private _publicKey: PublicKey;
   private _provider: any;
   readonly #signer?: SolanaWallet;
-  // readonly #secretKey: Uint8Array;
 
   constructor(
     privKey: string,
@@ -52,7 +50,6 @@ export class PepperSolanaWallet implements PepperWallet {
   ) {
     const keypair = Keypair.fromSecretKey(Buffer.from(privKey, 'hex'));
     this._publicKey = keypair.publicKey;
-    // this.#secretKey = keypair.secretKey;
     this.#signer = signer;
     this._provider = new Connection(
       chainConfig.rpcTarget || SOLANA_DEFAULT_RPC
@@ -101,11 +98,93 @@ export class PepperSolanaWallet implements PepperWallet {
     return balance * LAMPORTS_TO_SOLANA;
   }
 
-  public async prepareSendNftTransaction(): // tokenAddress: string,
-  // recipientAddress: string,
-  // id: string | undefined
-  Promise<any> {
-    return Promise.resolve(undefined);
+  private async getAssociatedTokenAccountsForTransaction(
+    tokenAddress: string,
+    recipientAddress: string,
+    transaction: Transaction
+  ): Promise<{
+    recipientTokenAccount: PublicKey;
+    payerTokenAccount: PublicKey;
+    mint: PublicKey;
+    transaction: Transaction;
+  }> {
+    const payerAccount = new PublicKey(this.address);
+    const recipientAccount = new PublicKey(recipientAddress);
+    const mint = new PublicKey(tokenAddress);
+
+    const payerTokenAccount = await getAssociatedTokenAddress(
+      mint,
+      payerAccount
+    );
+
+    const recipientTokenAccount = await getAssociatedTokenAddress(
+      mint,
+      recipientAccount
+    );
+    try {
+      await getAccount(this.provider, recipientTokenAccount);
+    } catch (error: unknown) {
+      if (
+        error instanceof TokenAccountNotFoundError ||
+        error instanceof TokenInvalidAccountOwnerError
+      ) {
+        const createAccountInstruction =
+          createAssociatedTokenAccountInstruction(
+            payerAccount,
+            recipientTokenAccount,
+            recipientAccount,
+            mint
+          );
+        transaction = transaction.add(createAccountInstruction);
+      } else {
+        throw error;
+      }
+    }
+    return {
+      recipientTokenAccount,
+      payerTokenAccount,
+      mint,
+      transaction,
+    };
+  }
+
+  public async prepareSendNftTransaction(
+    tokenAddress: string,
+    recipientAddress: string
+  ): Promise<Transaction> {
+    const block = await this.provider.getLatestBlockhash('finalized');
+
+    const fromAddress = new PublicKey(this.address);
+
+    let transaction = new Transaction({
+      blockhash: block.blockhash,
+      lastValidBlockHeight: block.lastValidBlockHeight,
+      feePayer: fromAddress,
+    });
+    const {
+      recipientTokenAccount,
+      payerTokenAccount: tokenAccount,
+      mint,
+      transaction: tx,
+    } = await this.getAssociatedTokenAccountsForTransaction(
+      tokenAddress,
+      recipientAddress,
+      transaction
+    );
+    transaction = tx;
+
+    const transferInstruction = createTransferCheckedInstruction(
+      tokenAccount, // from (should be a token account)
+      mint, // mint
+      recipientTokenAccount, // to (should be a token account)
+      fromAddress, // from's owner
+      1, // amount, if your decimals is 8, send 10^8 for 1 token
+      0 // decimals
+    );
+
+    transaction = transaction.add(transferInstruction);
+
+    return transaction;
   }
 
   public async prepareSendTransaction(
@@ -113,10 +192,9 @@ export class PepperSolanaWallet implements PepperWallet {
     recipientAddress: string,
     tokenOptions?: {
       tokenAddress: string;
-      tokenAccountAddress: string;
-      recipientTokenAddress: string;
+      tokenDecimals: number;
     }
-  ): Promise<any> {
+  ): Promise<Transaction> {
     const block = await this.provider.getLatestBlockhash('finalized');
 
     const fromAddress = new PublicKey(this.address);
@@ -127,51 +205,36 @@ export class PepperSolanaWallet implements PepperWallet {
       lastValidBlockHeight: block.lastValidBlockHeight,
       feePayer: fromAddress,
     });
-    // let transaction = new Transaction();
 
     let transferInstruction = null;
     if (
       tokenOptions &&
       tokenOptions.tokenAddress &&
-      tokenOptions.tokenAccountAddress
+      tokenOptions.tokenDecimals
     ) {
-      const tokenProgramAddress = new PublicKey(tokenOptions.tokenAddress);
-      const tokenAccountAddress = new PublicKey(
-        tokenOptions.tokenAccountAddress
-      );
-      const recipientTokenAccountAddress = new PublicKey(
-        tokenOptions.recipientTokenAddress
-      );
+      const { tokenAddress } = tokenOptions;
 
-      try {
-        await getAccount(this.provider, recipientTokenAccountAddress);
-      } catch (error: unknown) {
-        if (
-          error instanceof TokenAccountNotFoundError ||
-          error instanceof TokenInvalidAccountOwnerError
-        ) {
-          const createAccountInstruction =
-            createAssociatedTokenAccountInstruction(
-              fromAddress,
-              recipientTokenAccountAddress,
-              toAddress,
-              tokenProgramAddress,
-              TOKEN_PROGRAM_ID,
-              ASSOCIATED_TOKEN_PROGRAM_ID
-            );
-          transaction = transaction.add(createAccountInstruction);
-        } else {
-          throw error;
-        }
-      }
+      const {
+        recipientTokenAccount,
+        payerTokenAccount: tokenAccount,
+        mint,
+        transaction: tx,
+      } = await this.getAssociatedTokenAccountsForTransaction(
+        tokenAddress,
+        recipientAddress,
+        transaction
+      );
+      transaction = tx;
 
       transferInstruction = createTransferCheckedInstruction(
-        tokenAccountAddress, // from (should be a token account)
-        tokenProgramAddress, // mint
-        recipientTokenAccountAddress, // to (should be a token account)
+        tokenAccount, // from (should be a token account)
+        mint, // mint
+        recipientTokenAccount, // to (should be a token account)
         fromAddress, // from's owner
-        amount * 1e6, // amount, if your deciamls is 8, send 10^8 for 1 token
-        6 // decimals
+        // amount * 1e6, // amount, if your deciamls is 8, send 10^8 for 1 token
+        // 6 // decimals
+        amount * 10 ** tokenOptions.tokenDecimals, // amount, if your deciamls is 8, send 10^8 for 1 token
+        tokenOptions.tokenDecimals // decimals
       );
     } else {
       transferInstruction = SystemProgram.transfer({
@@ -186,7 +249,7 @@ export class PepperSolanaWallet implements PepperWallet {
   }
 
   public async signAndSendTransaction(
-    tx: any
+    tx: Transaction
   ): Promise<{ signature: string | null }> {
     const transactionResponse = await this.#signer?.signAndSendTransaction(tx);
     return { signature: transactionResponse?.signature || null };

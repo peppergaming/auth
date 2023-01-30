@@ -1,5 +1,5 @@
-export * from "./lib/core";
-export * from "./lib/wallet";
+export * from './lib/core';
+export * from './lib/wallet';
 export {
   LOGIN_STATUS,
   ADAPTER_STATUS,
@@ -14,4 +14,4 @@ export {
   SOLANA_DEFAULT_RPC,
   SOLANA_MAINNET_RPC,
   SOLANA_DEVNET_RPC,
-} from "./lib/config/constants";
+} from './lib/config/constants';
